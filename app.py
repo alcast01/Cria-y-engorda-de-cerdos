@@ -8,47 +8,69 @@ import streamlit as st
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
-    page_title="Porcidex | Nutrición y Porcicultura de Precisión",
+    page_title="Porcidex Pro | Nutrición y Porcicultura de Precisión",
     page_icon="🐖",
     layout="wide",
 )
 
-# --- ESTILOS CSS PERSONALIZADOS Y LOGOTIPO EMBLEMÁTICO ---
+# --- ESTILOS CSS PERSONALIZADOS Y LOGOTIPO EMBLEMÁTICO MEJORADO ---
 st.markdown(
     """
     <style>
     .brand-container {
-        background: linear-gradient(135deg, #1f4e78 0%, #112233 100%);
-        padding: 2rem;
-        border-radius: 12px;
+        background: linear-gradient(135deg, #1b365d 0%, #0d1b2a 100%);
+        padding: 2.2rem;
+        border-radius: 14px;
         color: white;
         text-align: center;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.1);
     }
-    .brand-logo {
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
+    .brand-logo-badge {
+        background: rgba(255, 255, 255, 0.12);
+        display: inline-block;
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-size: 1.05rem;
+        margin-bottom: 0.8rem;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        color: #a9dfbf;
     }
     .brand-title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        letter-spacing: 2px;
+        font-size: 2.8rem;
+        font-weight: 900;
+        letter-spacing: 3px;
         margin: 0;
         color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
     .brand-slogan {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-style: italic;
         color: #d9e1e8;
+        margin-top: 0.6rem;
+        margin-bottom: 1.2rem;
+    }
+    .meta-info-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        font-size: 0.9rem;
+        color: #b0bec5;
+        font-weight: 500;
+        border-top: 1px solid rgba(255,255,255,0.15);
+        padding-top: 0.9rem;
         margin-top: 0.5rem;
-        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    .meta-item {
+        color: #ffffff;
     }
     .creator-tag {
-        font-size: 0.95rem;
-        color: #a9dfbf;
-        font-weight: 600;
-        letter-spacing: 0.5px;
+        color: #f39c12;
+        font-weight: 700;
     }
     .report-card {
         background-color: #f8f9fa;
@@ -62,14 +84,20 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- CABECERA CON LOGOTIPO Y SLOGAN EMBLEMÁTICO ---
+# --- CABECERA CON LOGOTIPO, VERSIÓN Y NÚMERO DE SERIE ---
 st.markdown(
     """
     <div class="brand-container">
-        <div class="brand-logo">🐖⚡</div>
-        <h1 class="brand-title">PORCIDEX</h1>
-        <p class="brand-slogan">"Ciencia y Precisión al Servicio de la Porcicultura Moderna"</p>
-        <p class="creator-tag">Creado y desarrollado por el Dr. Alejandro Castañeda Correa</p>
+        <div class="brand-logo-badge">🐖 🧬 PRECISION SWINE NUTRITION & PLF SYSTEMS</div>
+        <h1 class="brand-title">PORCIDEX™</h1>
+        <p class="brand-slogan">"Ciencia, Innovación y Precisión al Servicio de la Porcicultura Moderna"</p>
+        <div class="meta-info-container">
+            <span>Versión: <strong class="meta-item">v7.0 Pro</strong></span>
+            <span>•</span>
+            <span>Nº de Serie: <strong class="meta-item">PRX-2026-MX-9842</strong></span>
+            <span>•</span>
+            <span>Desarrollador: <strong class="creator-tag">Dr. Alejandro Castañeda Correa</strong></span>
+        </div>
     </div>
 """,
     unsafe_allow_html=True,
@@ -141,8 +169,8 @@ monitoreo_acustico = st.sidebar.checkbox(
 # --- NAVEGACIÓN PRINCIPAL POR PESTAÑAS ---
 tab_engorda, tab_formulacion, tab_lactancia, tab_resumen = st.tabs(
     [
-        "📈 Engorda, PLF y Control Térmico",
-        "🧮 Formulación Avanzada (Precios e Insumos)",
+        "📈 Engorda, PLF y Control de GDP",
+        "🧮 Formulación y Precios de Insumos",
         "🍼 Cerdas en Lactancia y Cría",
         "📋 Resumen Técnico y Comercial",
     ]
@@ -186,7 +214,6 @@ with tab_engorda:
         st.markdown("---")
         st.markdown("### ⚡ Ajuste Manual de Ganancia Diaria de Peso (GDP)")
         
-        # Sugerencia base por etapa
         base_gdp_def = 0.68 if etapa_eng == "Iniciación" else (0.95 if etapa_eng == "Desarrollo y Crecimiento" else 1.10)
         
         gdp_manual = st.slider(
@@ -239,7 +266,6 @@ with tab_engorda:
         if uso_pfs:
             base_ca *= 0.92
 
-        # CÁLCULO DE DURACIÓN DE ENGORDA Y CONSUMOS BASADO EN GDP SELECCIONADA
         gdp_ajustada = gdp_manual * factor_estres
         ca_ajustada = base_ca / factor_estres
         ganancia_requerida = max(0.1, peso_objetivo - peso_inicial)
@@ -299,7 +325,7 @@ with tab_engorda:
         st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
 
 # ==========================================
-# PESTAÑA 2: FORMULACIÓN AVANZADA Y PRECIOS DE INSUMOS
+# PESTAÑA 2: FORMULACIÓN AVANZADA Y PRECIOS
 # ==========================================
 with tab_formulacion:
     st.subheader(
@@ -322,7 +348,6 @@ with tab_formulacion:
             key="etap_form_multi",
         )
 
-    # Requerimientos nutricionales
     if "Iniciación" in etapa_form:
         min_ne, min_sid_lys, min_pc, max_fibra = 2350.0, 0.95, 19.5, 5.0
     elif "Desarrollo" in etapa_form:
@@ -332,7 +357,6 @@ with tab_formulacion:
     else:
         min_ne, min_sid_lys, min_pc, max_fibra = 2180.0, 0.60, 15.0, 8.5
 
-    # Master DB de Insumos con Precios Editables
     datos_maestros = [
         {"Ingrediente": "Maíz Grano", "Disponible": True, "Costo ($/kg)": 5.50, "NE (kcal/kg)": 2650.0, "SID Lys (%)": 0.26, "PC (%)": 8.5, "Fibra (%)": 2.0, "bound": (20.0, 80.0), "base": 58.0},
         {"Ingrediente": "Sorgo Grano", "Disponible": True, "Costo ($/kg)": 5.20, "NE (kcal/kg)": 2580.0, "SID Lys (%)": 0.22, "PC (%)": 10.0, "Fibra (%)": 2.2, "bound": (0.0, 60.0), "base": 0.0},
@@ -429,7 +453,6 @@ with tab_formulacion:
             costo_kg = sum(p * cost for p, cost in zip(props, c)) / 100.0
             st.warning("⚠️ Ajuste comercial de respaldo aplicado para garantizar un balance adecuado.")
 
-        # Garantizar que la inclusión sume exactamente 100.00% y los kg sumen 1,000.0 kg
         inclusions = [round(p, 2) for p in props]
         diff_inc = round(100.0 - sum(inclusions), 2)
         if inclusions:
@@ -477,7 +500,7 @@ with tab_formulacion:
 # ==========================================
 with tab_lactancia:
     st.subheader(
-        "BN Módulo de Nutrición, Cría y Soporte Metabólico en Cerdas Lactantes"
+        "🍼 Módulo de Nutrición, Cría y Soporte Metabólico en Cerdas Lactantes"
     )
 
     col_l1, col_l2 = st.columns(2)
@@ -550,31 +573,19 @@ def generar_pdf_reporte(
 
     pdf.set_font("Helvetica", "B", 16)
     pdf.set_text_color(31, 78, 120)
-    pdf.cell(0, 10, "PORCIDEX - REPORTE TECNICO Y COMERCIAL", ln=True, align="C")
+    pdf.cell(0, 10, "PORCIDEX PRO - REPORTE TECNICO Y COMERCIAL", ln=True, align="C")
 
-    pdf.set_font("Helvetica", "I", 10)
+    pdf.set_font("Helvetica", "I", 9)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(
-        0,
-        5,
-        "Ciencia y Precision al Servicio de la Porcicultura Moderna",
-        ln=True,
-        align="C",
-    )
-    pdf.cell(
-        0,
-        5,
-        "Creado y desarrollado por el Dr. Alejandro Castaneda Correa",
-        ln=True,
-        align="C",
-    )
-    pdf.ln(4)
+    pdf.cell(0, 4, "Version: v7.0 Pro | S/N: PRX-2026-MX-9842", ln=True, align="C")
+    pdf.cell(0, 5, "Creado y desarrollado por el Dr. Alejandro Castaneda Correa", ln=True, align="C")
+    pdf.ln(3)
 
     pdf.set_draw_color(31, 78, 120)
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(6)
 
-    # 1. RESUMEN EJECUTIVO PARA EL PRODUCTOR
+    # 1. RESUMEN EJECUTIVO
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(31, 78, 120)
     pdf.cell(0, 7, "1. RESUMEN EJECUTIVO (PRODUCTOR / PORCICULTOR)", ln=True)
@@ -590,8 +601,8 @@ def generar_pdf_reporte(
         f"Perfil Genetico: {raza_eng}",
         f"Tamano del Lote: {num_animales:,} cerdos",
         f"Rango de Peso: {peso_inicial:.1f} kg -> {peso_objetivo:.1f} kg (Ganancia: {peso_objetivo-peso_inicial:.1f} kg)",
-        f"Dias Estimados a Mercado: {dias_estudio} dias",
-        f"Ganancia Diaria Promedio (GDP): {gdp_ajustada:.2f} kg/dia",
+        f"Duracion Estimada de Engorda: {dias_estudio} dias",
+        f"Ganancia Diaria Promedio (GDP Operativa): {gdp_ajustada:.2f} kg/dia",
         f"Conversion Alimenticia (CA): {ca_ajustada:.2f} kg alimento / kg peso",
         f"Consumo Alimento por Cerdo: {consumo_total_cerdo:.1f} kg",
         f"Consumo Total Lote: {consumo_total_lote:,.1f} kg ({round(consumo_total_lote/40):,} sacos de 40kg)",
@@ -604,7 +615,7 @@ def generar_pdf_reporte(
 
     pdf.ln(4)
 
-    # 2. RESUMEN TÉCNICO PARA EL NUTRIÓLOGO / MVZ
+    # 2. RESUMEN TÉCNICO
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(46, 125, 50)
     pdf.cell(0, 7, "2. RESUMEN TECNICO (NUTRIOLOGO / VETERINARIO)", ln=True)
@@ -635,9 +646,10 @@ def generar_pdf_reporte(
 
     pdf.set_font("Helvetica", "B", 9)
     pdf.set_fill_color(230, 230, 230)
-    pdf.cell(100, 6, "Materia Prima / Ingrediente", border=1, fill=True)
-    pdf.cell(40, 6, "Inclusion (%)", border=1, fill=True, align="C")
-    pdf.cell(45, 6, "Kg por Tonelada", border=1, fill=True, align="C")
+    pdf.cell(90, 6, "Materia Prima / Ingrediente", border=1, fill=True)
+    pdf.cell(35, 6, "Inclusion (%)", border=1, fill=True, align="C")
+    pdf.cell(35, 6, "Kg / Tonelada", border=1, fill=True, align="C")
+    pdf.cell(30, 6, "Costo ($/Ton)", border=1, fill=True, align="C")
     pdf.ln()
 
     pdf.set_font("Helvetica", "", 9)
@@ -646,10 +658,12 @@ def generar_pdf_reporte(
             ing = str(row["Materia Prima / Ingrediente"])
             inc = f"{row['Inclusión (%)']:.2f} %"
             kg_ton = f"{row['Kg por Tonelada']:.1f} kg"
+            cost_ton = str(row["Aporte ($/Ton)"])
 
-            pdf.cell(100, 6, ing, border=1)
-            pdf.cell(40, 6, inc, border=1, align="C")
-            pdf.cell(45, 6, kg_ton, border=1, align="C")
+            pdf.cell(90, 6, ing, border=1)
+            pdf.cell(35, 6, inc, border=1, align="C")
+            pdf.cell(35, 6, kg_ton, border=1, align="C")
+            pdf.cell(30, 6, cost_ton, border=1, align="C")
             pdf.ln()
 
     pdf.ln(8)
@@ -658,7 +672,7 @@ def generar_pdf_reporte(
     pdf.cell(
         0,
         5,
-        "Documento generado automaticamente por Porcidex v6.9.",
+        "Porcidex v7.0 Pro | S/N: PRX-2026-MX-9842 | Dr. Alejandro Castaneda Correa",
         align="C",
     )
 
@@ -666,7 +680,7 @@ def generar_pdf_reporte(
 
 
 # ==========================================
-# PESTAÑA 4: RESUMEN TÉCNICO Y COMERCIAL CON DESCARGA PDF
+# PESTAÑA 4: RESUMEN TÉCNICO Y COMERCIAL
 # ==========================================
 with tab_resumen:
     st.subheader(
@@ -700,8 +714,8 @@ with tab_resumen:
         * **Peso Inicial Promedio:** `{peso_inicial:.1f} kg`
         * **Peso Final Objetivo:** `{peso_objetivo:.1f} kg`
         * **Ganancia Total por Cerdo:** `{ganancia_peso_total:.1f} kg`
-        * **Días Estimados a Mercado:** `{dias_estudio} días`
-        * **Ganancia Diaria Promedio (GDP):** `{gdp_ajustada:.2f} kg/día`
+        * **Duración de la Engorda:** `{dias_estudio} días` (`{round(dias_estudio/30, 1)} meses`)
+        * **Ganancia Diaria Promedio (GDP Operativa):** `{gdp_ajustada:.2f} kg/día`
         * **Conversión Alimenticia (CA):** `{ca_ajustada:.2f}` *(kg alimento / kg peso)*
         * **Consumo Total Alimento por Cerdo:** `{consumo_total_cerdo:.1f} kg`
         * **Consumo Total de Alimento por Lote:** `{consumo_total_lote:,.1f} kg` (`{round(consumo_total_lote/40):,} sacos de 40 kg`)
@@ -769,12 +783,12 @@ with tab_resumen:
     st.download_button(
         label="📄 Descargar Reporte Completo en PDF",
         data=pdf_bytes,
-        file_name=f"Reporte_Porcidex_{etapa_eng.replace(' ', '_')}.pdf",
+        file_name=f"Reporte_Porcidex_Pro_{etapa_eng.replace(' ', '_')}.pdf",
         mime="application/pdf",
         help="Haz clic para descargar el resumen completo en formato PDF listo para imprimir.",
     )
 
 st.markdown("---")
 st.caption(
-    "Porcidex v6.9 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v7.0 Pro | S/N: PRX-2026-MX-9842 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
