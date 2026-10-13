@@ -240,13 +240,15 @@ with tab_formulacion:
         "Este modelo utiliza programación lineal para resolver la mezcla óptima de ingredientes al menor costo posible, satisfaciendo los requerimientos mínimos y máximos nutricionales para la etapa seleccionada."
     )
 
-    col_f1, col_f2 = st.columns(1)
+    # Corregido: se usa st.columns(2) para que coincida con el desempaquetado
+    col_f1, col_f2 = st.columns(2)
 
-    # Definir requerimientos según etapa seleccionada
-    req_etapa = st.selectbox(
-        "Seleccionar Etapa para Formulación",
-        ["Iniciación", "Desarrollo", "Finalización"],
-    )
+    with col_f1:
+        req_etapa = st.selectbox(
+            "Seleccionar Etapa para Formulación",
+            ["Iniciación", "Desarrollo", "Finalización"],
+        )
+
     if req_etapa == "Iniciación":
         min_pc, min_em, max_fibra = 21.0, 3250.0, 3.5
     elif req_etapa == "Desarrollo":
@@ -266,29 +268,18 @@ with tab_formulacion:
     )
 
     if st.button("🚀 Optimizar Dieta al Mínimo Costo"):
-        # Tabla nutricional de ingredientes (Matriz)
-        # Ingredientes: [Maiz, Soya, Salvado, Aceite]
-        # Propiedades: [PC (%), EM (kcal/kg), Fibra (%)]
         c = [precio_maiz, precio_soya, precio_salvado, precio_aceite]
 
-        # Restricciones de Desigualdad (Ax <= b o Ax >= b convertidas a <=)
-        # 1. Proteína Cruda >= min_pc  --> -PC_i <= -min_pc
-        # 2. Energía Met. >= min_em   --> -EM_i <= -min_em
-        # 3. Fibra Cruda <= max_fibra --> Fibra_i <= max_fibra
-        # 4. Suma de proporciones = 100% --> A_eq * x = 100
-
         A_ub = [
-            [-9.0, -48.0, -15.0, 0.0],  # -PC >= min_pc
-            [-3350.0, -3200.0, -2500.0, -8500.0],  # -EM >= min_em
-            [2.0, 7.0, 11.0, 0.0],  # Fibra <= max_fibra
+            [-9.0, -48.0, -15.0, 0.0],
+            [-3350.0, -3200.0, -2500.0, -8500.0],
+            [2.0, 7.0, 11.0, 0.0],
         ]
         b_ub = [-min_pc, -min_em, max_fibra]
 
-        # Restricción de igualdad: suma = 100 kg
         A_eq = [[1.0, 1.0, 1.0, 1.0]]
         b_eq = [100.0]
 
-        # Límites para cada ingrediente (0% a 85%)
         bounds = [(0, 85), (5, 45), (0, 25), (0, 6)]
 
         res = linprog(
@@ -336,9 +327,7 @@ with tab_formulacion:
 # PESTAÑA 3: CERDAS EN LACTANCIA
 # ==========================================
 with tab_lactancia:
-    st.subheader(
-        "🍼 Módulo de Nutrición y Manejo de Cerdas en Lactancia"
-    )
+    st.subheader("🍼 Módulo de Nutrición y Manejo de Cerdas en Lactancia")
     st.markdown(
         "Garantiza el éxito de la camada mediante el soporte metabólico de la cerda lactante, previniendo la pérdida excesiva de condición corporal y maximizando la producción láctea."
     )
@@ -363,17 +352,12 @@ with tab_lactancia:
     with col_l2:
         st.markdown("### 📊 Estimación de Requerimientos y Consumo")
 
-        # Cálculos zootécnicos lactancia
-        # Consumo diario estimado de alimento de la cerda = 2.0 kg (mantenimiento) + 0.5 kg por lechón destetado
         consumo_diario_cerda = 2.0 + (num_nacidos_vivos * 0.42)
         if temp_sala_parto > 24.0:
-            # Reducción de consumo por calor en lactancia
             consumo_diario_cerda *= 1.0 - ((temp_sala_parto - 24.0) * 0.04)
 
         consumo_total_lactancia = consumo_diario_cerda * dias_lactancia
-        leche_producida_estimada = (
-            peso_destete_objetivo * num_nacidos_vivos * 3.8
-        )  # Relación empírica leche/ganancia
+        leche_producida_estimada = peso_destete_objetivo * num_nacidos_vivos * 3.8
 
         st.metric(
             label="Consumo Diario Sugerido para la Cerda",
