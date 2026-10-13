@@ -535,7 +535,7 @@ with tab_formulacion:
         
         st.table(df_form_filt)
         
-        st.success(f"⚖️ **Total Ración Balanceada:** `{df_form_filt['Inclusión (%)'].sum():.2f}%` = `{df_form_filt['Kg por Tonelada'].sum():.1f} kg / Tonelada`")
+        st.success(f"秤 **Total Ración Balanceada:** `{df_form_filt['Inclusión (%)'].sum():.2f}%` = `{df_form_filt['Kg por Tonelada'].sum():.1f} kg / Tonelada`")
 
         aportes_ne = sum((inc/100.0) * next(d["NE (kcal/kg)"] for d in datos_maestros if d["Ingrediente"] == ing) for inc, ing in zip(inclusions, ingredientes_activos))
         aportes_lys = sum((inc/100.0) * next(d["SID Lys (%)"] for d in datos_maestros if d["Ingrediente"] == ing) for inc, ing in zip(inclusions, ingredientes_activos))
@@ -555,53 +555,105 @@ with tab_formulacion:
         m_c2.metric("Costo por Tonelada", f"${costo_kg * 1000:,.2f} MXN / Ton")
 
 # ==========================================
-# PESTAÑA 3: CERDAS EN LACTANCIA Y CRÍA
+# PESTAÑA 3: CERDAS EN LACTANCIA, REPRODUCCIÓN Y CRÍA
 # ==========================================
 with tab_lactancia:
     st.subheader(
-        "🍼 Módulo de Nutrición, Cría y Soporte Metabólico en Cerdas Lactantes"
+        "🍼 Módulo Avanzado de Reproducción, Lactancia y Suplementación en Cerdas"
     )
 
     col_l1, col_l2 = st.columns(2)
 
     with col_l1:
-        st.markdown("### 📋 Variables Reproductivas y de Cría")
+        st.markdown("### 📋 Variables Reproductivas, Parto y Cría")
         paridad = st.selectbox(
-            "Número de Paridad",
+            "Número de Paridad / Edad Productiva",
             [
-                "Primeriza (Alta sensibilidad metabólica y menor consumo)",
-                "Multípara (Paridad 2 a 5 - Máximo potencial lechero)",
-                "Longevidad (> Paridad 6)",
+                "Primeriza (Paridad 1 - Sensible a balance energético negativo)",
+                "Multípara Comercial (Paridad 2 a 5 - Máximo potencial lechero)",
+                "Longevidad (> Paridad 6 - Riesgo de desgaste corporal)",
             ],
         )
-        nacidos_vivos = st.number_input(
-            "Lechones Nacidos Vivos", 4, 22, 13
+        dias_gestacion = st.slider("Duración de la Gestación (Días)", 112, 117, 115)
+        peso_cerda_parto = st.number_input("Peso Corporal al Parto (kg)", 160.0, 320.0, 230.0, step=5.0)
+        condicion_corporal = st.selectbox(
+            "Condición Corporal al Parto (BCS 1-5)",
+            [
+                "BCS 2.0 - Delgada (Riesgo metabólico / hipogalactia)",
+                "BCS 3.0 - Ideal (Reservas metabólicas equilibradas)",
+                "BCS 4.0 - Sobrepeso (Riesgo de parto distócico y bajo consumo)",
+            ],
+            index=1,
         )
-        dias_lac = st.slider("Duración de la Lactancia (Días)", 14, 35, 21)
-        peso_destete = st.number_input(
-            "Peso Objetivo por Lechón al Destete (kg)", 5.0, 9.5, 6.8
-        )
+        nacidos_totales = st.number_input("Lechones Nacidos Totales", 4, 25, 15)
+        nacidos_vivos = st.number_input("Lechones Nacidos Vivos", 4, 22, 14)
+        mortalidad_predestete = st.slider("Mortalidad Pre-Destete Esperada (%)", 2.0, 20.0, 6.5, step=0.5)
+        dias_lac = st.slider("Duración de la Lactancia (Días)", 18, 35, 21)
+        peso_destete = st.number_input("Peso Objetivo por Lechón al Destete (kg)", 5.0, 9.5, 6.8)
+        idc_objetivo = st.number_input("Intervalo Destete-Celo Objetivo (IDC - Días)", 3, 10, 5)
 
     with col_l2:
-        st.markdown("### 📊 Estimación del Desempeño Lácteo y Consumo")
+        st.markdown("### 📊 Estimación del Desempeño Lácteo y Requerimientos")
 
-        f_par = 0.88 if "Primeriza" in paridad else 1.00
-        consumo_cerda = (2.1 + (nacidos_vivos * 0.44)) * f_par
+        f_par = 0.88 if "Primeriza" in paridad else (1.00 if "Multípara" in paridad else 0.95)
+        consumo_base = (2.1 + (nacidos_vivos * 0.44)) * f_par
 
+        # Ajuste por condición corporal
+        if "BCS 2.0" in condicion_corporal:
+            consumo_base *= 1.05
+        elif "BCS 4.0" in condicion_corporal:
+            consumo_base *= 0.90
+
+        # Ajuste ambiental THI
         if thi_calculado > 74.0:
-            consumo_cerda *= 1.0 - ((thi_calculado - 74.0) * 0.025)
+            consumo_base *= 1.0 - ((thi_calculado - 74.0) * 0.025)
 
-        consumo_total_lac = consumo_cerda * dias_lac
-        leche_total = peso_destete * nacidos_vivos * 3.85
+        lechones_destetados = round(nacidos_vivos * (1.0 - (mortalidad_predestete / 100.0)), 1)
+        consumo_total_lac = consumo_base * dias_lac
+        leche_total = peso_destete * lechones_destetados * 3.85
+        leche_diaria = leche_total / dias_lac
 
-        st.metric(
-            "Consumo Diario Sugerido para la Cerda",
-            f"{consumo_cerda:.2f} kg/día",
-        )
-        st.metric(
-            "Consumo Total en Lactancia", f"{consumo_total_lac:,.1f} kg"
-        )
-        st.metric("Producción Láctea Total Estimada", f"{leche_total:,.1f} kg")
+        # Métricas
+        st.metric("Consumo Diario Sugerido (Cerda)", f"{consumo_base:.2f} kg/día")
+        st.metric("Lechones Estimados al Destete", f"{lechones_destetados:.1f} lechones / camada")
+        st.metric("Producción Láctea Total Estimada", f"{leche_total:,.1f} kg (`{leche_diaria:.1f} kg/día`)")
+        st.metric("Consumo Total en Lactancia", f"{consumo_total_lac:,.1f} kg")
+
+    st.markdown("---")
+    st.markdown("### 🧪 Insumos y Suplementos Especiales para Lactancia y Recuperación Reproductiva")
+    st.markdown("Ajuste los insumos nutracéuticos y funcionales para incorporar en el alimento de lactancia:")
+
+    suplementos_default = [
+        {"Insumo / Suplemento": "L-Carnitina (Mobilización de Grasa)", "Activo": True, "Inclusión (kg/Ton)": 0.20, "Costo ($/kg)": 450.00, "Objetivo Fisiológico": "Mejora oxidación de ácidos grasos y energía láctea"},
+        {"Insumo / Suplemento": "Betaina Anhidra", "Activo": True, "Inclusión (kg/Ton)": 1.50, "Costo ($/kg)": 120.00, "Objetivo Fisiológico": "Osmoprotector y mitigación de estrés térmico (THI)"},
+        {"Insumo / Suplemento": "Aceite de Pescado / Omega-3 (EPA/DHA)", "Activo": True, "Inclusión (kg/Ton)": 3.00, "Costo ($/kg)": 85.00, "Objetivo Fisiológico": "Reducción de duración del parto y viabilidad del lechón"},
+        {"Insumo / Suplemento": "Aceite de Soya / Grasa Vegetal", "Activo": True, "Inclusión (kg/Ton)": 20.00, "Costo ($/kg)": 24.00, "Objetivo Fisiológico": "Densidad energética e incremento de sólidos en leche"},
+        {"Insumo / Suplemento": "Fitasa / Núcleo Enzimático Avanzado", "Activo": True, "Inclusión (kg/Ton)": 0.15, "Costo ($/kg)": 380.00, "Objetivo Fisiológico": "Preservación mineral ósea y liberación de Fósforo"},
+        {"Insumo / Suplemento": "Probióticos / Levadura Viva", "Activo": False, "Inclusión (kg/Ton)": 1.00, "Costo ($/kg)": 160.00, "Objetivo Fisiológico": "Estabilidad microbiota digestiva y prevención de estreñimiento"},
+    ]
+
+    df_sup_base = pd.DataFrame(suplementos_default)
+
+    df_sup_edit = st.data_editor(
+        df_sup_base,
+        column_config={
+            "Insumo / Suplemento": st.column_config.TextColumn("Insumo / Suplemento", disabled=True),
+            "Activo": st.column_config.CheckboxColumn("Activo", default=True),
+            "Inclusión (kg/Ton)": st.column_config.NumberColumn("Inclusión (kg/Ton)", min_value=0.01, max_value=50.0, step=0.1, format="%.2f kg"),
+            "Costo ($/kg)": st.column_config.NumberColumn("Costo ($/kg)", min_value=1.0, max_value=2000.0, step=5.0, format="$%.2f"),
+            "Objetivo Fisiológico": st.column_config.TextColumn("Objetivo Fisiológico", disabled=True),
+        },
+        hide_index=True,
+        use_container_width=True,
+    )
+
+    df_sup_activos = df_sup_edit[df_sup_edit["Activo"] == True]
+
+    if not df_sup_activos.empty:
+        costo_suplementacion_ton = sum(row["Inclusión (kg/Ton)"] * row["Costo ($/kg)"] for _, row in df_sup_activos.iterrows())
+        st.success(f"💊 **Costo Adicional de Suplementación Nutracéutica:** `${costo_suplementacion_ton:,.2f} MXN / Tonelada de Alimento`")
+    else:
+        st.info("💡 No se seleccionaron suplementos adicionales para la dieta de lactancia.")
 
 # ==========================================
 # FUNCION GENERADORA DE PDF
