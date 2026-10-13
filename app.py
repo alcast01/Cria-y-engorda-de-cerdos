@@ -227,3 +227,21 @@ pesos_proyectados = [
 
 df_proyeccion = pd.DataFrame(
     {
+        "Día": semanas,
+        "Peso Promedio Proyectado (kg)": [round(p, 2) for p in pesos_proyectados],
+        "Consumo Acumulado por Animal (kg)": [
+            round(consumo_diario_estimado * d, 2) for d in semanas
+        ],
+    }
+)
+
+st.line_chart(
+    df_proyeccion.set_index("Día"),
+    y=["Peso Promedio Proyectado (kg)"],
+    color=["#1f4e78"],
+)
+
+st.markdown("---")
+st.caption(
+    "PorcinoMetrics v1.0 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+)
