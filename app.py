@@ -294,14 +294,14 @@ with tab_engorda:
         st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
 
 # ==========================================
-# PESTAÑA 2: FORMULACIÓN AVANZADA DINÁMICA
+# PESTAÑA 2: FORMULACIÓN AVANZADA DINÁMICA CON TABLA INTERACTIVA
 # ==========================================
 with tab_formulacion:
     st.subheader(
-        "🧮 Optimización Lineal Multi-Ingrediente con Selección Dinámica en Almacén"
+        "🧮 Optimización Lineal Multi-Ingrediente con Selección en Lista Interactiva"
     )
     st.markdown(
-        "Seleccione con un clic las materias primas disponibles en su inventario. El sistema optimizará la ración al mínimo costo ajustándose estrictamente a su disponibilidad."
+        "Seleccione o deseleccione con un clic las materias primas disponibles en la columna **'Disponible'** y ajuste el costo unitario de cada ingrediente."
     )
 
     col_f1, col_f2 = st.columns(2)
@@ -327,131 +327,66 @@ with tab_formulacion:
         min_ne, min_sid_lys, max_fibra = 2150.0, 0.60, 9.5
 
     # Base de datos maestra de ingredientes
-    master_ingredientes = {
-        "Maíz Grano": {
-            "ne": 2650.0,
-            "lys": 0.26,
-            "fibra": 2.0,
-            "costo": 5.50,
-            "bound": (0.0, 95.0),
-        },
-        "Sorgo Grano": {
-            "ne": 2580.0,
-            "lys": 0.22,
-            "fibra": 2.2,
-            "costo": 5.20,
-            "bound": (0.0, 95.0),
-        },
-        "Pasta de Soya 48%": {
-            "ne": 2240.0,
-            "lys": 2.85,
-            "fibra": 7.0,
-            "costo": 12.00,
-            "bound": (2.0, 50.0),
-        },
-        "Pasta de Canola": {
-            "ne": 2050.0,
-            "lys": 2.10,
-            "fibra": 11.5,
-            "costo": 8.50,
-            "bound": (0.0, 30.0),
-        },
-        "Salvado de Trigo": {
-            "ne": 1700.0,
-            "lys": 0.65,
-            "fibra": 11.0,
-            "costo": 4.00,
-            "bound": (0.0, 30.0),
-        },
-        "DDGS de Maíz": {
-            "ne": 2350.0,
-            "lys": 0.65,
-            "fibra": 8.5,
-            "costo": 6.80,
-            "bound": (0.0, 35.0),
-        },
-        "Harina de Carne y Hueso": {
-            "ne": 2050.0,
-            "lys": 2.40,
-            "fibra": 2.0,
-            "costo": 9.50,
-            "bound": (0.0, 20.0),
-        },
-        "Aceite Vegetal / Grasa": {
-            "ne": 5800.0,
-            "lys": 0.0,
-            "fibra": 0.0,
-            "costo": 22.00,
-            "bound": (0.0, 10.0),
-        },
-        "Núcleo Vitamínico-Mineral con Fitasa": {
-            "ne": 0.0,
-            "lys": 0.0,
-            "fibra": 0.0,
-            "costo": 38.00,
-            "bound": (1.0, 6.0),
-        },
-    }
+    datos_maestros = [
+        {"Disponible": True, "Ingrediente": "Maíz Grano", "Costo ($/kg)": 5.50, "NE (kcal/kg)": 2650.0, "SID Lys (%)": 0.26, "Fibra (%)": 2.0, "bound": (0.0, 95.0)},
+        {"Disponible": True, "Ingrediente": "Sorgo Grano", "Costo ($/kg)": 5.20, "NE (kcal/kg)": 2580.0, "SID Lys (%)": 0.22, "Fibra (%)": 2.2, "bound": (0.0, 95.0)},
+        {"Disponible": True, "Ingrediente": "Pasta de Soya 48%", "Costo ($/kg)": 12.00, "NE (kcal/kg)": 2240.0, "SID Lys (%)": 2.85, "Fibra (%)": 7.0, "bound": (2.0, 50.0)},
+        {"Disponible": False, "Ingrediente": "Pasta de Canola", "Costo ($/kg)": 8.50, "NE (kcal/kg)": 2050.0, "SID Lys (%)": 2.10, "Fibra (%)": 11.5, "bound": (0.0, 30.0)},
+        {"Disponible": True, "Ingrediente": "Salvado de Trigo", "Costo ($/kg)": 4.00, "NE (kcal/kg)": 1700.0, "SID Lys (%)": 0.65, "Fibra (%)": 11.0, "bound": (0.0, 30.0)},
+        {"Disponible": True, "Ingrediente": "DDGS de Maíz", "Costo ($/kg)": 6.80, "NE (kcal/kg)": 2350.0, "SID Lys (%)": 0.65, "Fibra (%)": 8.5, "bound": (0.0, 35.0)},
+        {"Disponible": True, "Ingrediente": "Harina de Carne y Hueso", "Costo ($/kg)": 9.50, "NE (kcal/kg)": 2050.0, "SID Lys (%)": 2.40, "Fibra (%)": 2.0, "bound": (0.0, 20.0)},
+        {"Disponible": True, "Ingrediente": "Aceite Vegetal / Grasa", "Costo ($/kg)": 22.00, "NE (kcal/kg)": 5800.0, "SID Lys (%)": 0.0, "Fibra (%)": 0.0, "bound": (0.0, 10.0)},
+        {"Disponible": True, "Ingrediente": "Núcleo Vitamínico-Mineral con Fitasa", "Costo ($/kg)": 38.00, "NE (kcal/kg)": 0.0, "SID Lys (%)": 0.0, "Fibra (%)": 0.0, "bound": (1.0, 6.0)},
+    ]
 
-    st.markdown("### 📦 Inventario y Disponibilidad en Almacén")
-    ingredientes_seleccionados = st.multiselect(
-        "Seleccione las materias primas disponibles para incluir en la optimización:",
-        options=list(master_ingredientes.keys()),
-        default=[
-            "Maíz Grano",
-            "Sorgo Grano",
-            "Pasta de Soya 48%",
-            "Salvado de Trigo",
-            "DDGS de Maíz",
-            "Harina de Carne y Hueso",
-            "Aceite Vegetal / Grasa",
-            "Núcleo Vitamínico-Mineral con Fitasa",
-        ],
-        help="Desmarque o seleccione ingredientes con un solo clic según el stock actual en granja.",
+    df_inventario = pd.DataFrame(datos_maestros)
+
+    st.markdown("### 📦 Inventario Interactivo de Almacén")
+    st.info("💡 **Instrucciones:** Marque o desmarque la casilla en la columna **'Disponible'** para seleccionar qué ingredientes usar en la dieta.")
+
+    # Editor interactivo de tabla con checkboxes
+    df_editado = st.data_editor(
+        df_inventario[["Disponible", "Ingrediente", "Costo ($/kg)", "NE (kcal/kg)", "SID Lys (%)", "Fibra (%)"]],
+        column_config={
+            "Disponible": st.column_config.CheckboxColumn(
+                "Disponible",
+                help="Seleccione o deseleccione para activar en la dieta",
+                default=True,
+            ),
+            "Costo ($/kg)": st.column_config.NumberColumn(
+                "Costo ($/kg)",
+                min_value=0.5,
+                max_value=100.0,
+                format="$%.2f",
+            ),
+        },
+        disabled=["Ingrediente", "NE (kcal/kg)", "SID Lys (%)", "Fibra (%)"],
+        hide_index=True,
+        use_container_width=True,
     )
 
-    if not ingredientes_seleccionados:
-        st.warning(
-            "⚠️ Debe seleccionar al menos un ingrediente para formular la dieta."
-        )
+    # Filtrar solo ingredientes activos
+    df_activos = df_editado[df_editado["Disponible"] == True]
+
+    if df_activos.empty:
+        st.warning("⚠️ Debe seleccionar al menos un ingrediente activo en la tabla de inventario.")
         props, costo_kg, df_form_filt = [], 0.0, pd.DataFrame()
     else:
-        st.markdown(
-            "### 💰 Costos Unitarios de Ingredientes Seleccionados ($ / kg)"
-        )
-        costos_ingredientes = {}
-        cols = st.columns(3)
-        for idx, ing in enumerate(ingredientes_seleccionados):
-            with cols[idx % 3]:
-                costos_ingredientes[ing] = st.number_input(
-                    f"{ing} ($/kg)",
-                    min_value=0.5,
-                    max_value=100.0,
-                    value=master_ingredientes[ing]["costo"],
-                    key=f"cost_{ing}",
-                )
+        # Reconstrucción dinámica de listas de optimización a partir de los seleccionados
+        ingredientes_activos = df_activos["Ingrediente"].tolist()
+        c = df_activos["Costo ($/kg)"].tolist()
+        ne_coefs = [-float(row["NE (kcal/kg)"]) for _, row in df_activos.iterrows()]
+        lys_coefs = [-float(row["SID Lys (%)"]) for _, row in df_activos.iterrows()]
+        fibra_coefs = [float(row["Fibra (%)"]) for _, row in df_activos.iterrows()]
 
-        # Construcción dinámica de vectores para linprog
-        c = [costos_ingredientes[ing] for ing in ingredientes_seleccionados]
-        ne_coefs = [
-            -master_ingredientes[ing]["ne"] for ing in ingredientes_seleccionados
-        ]
-        lys_coefs = [
-            -master_ingredientes[ing]["lys"]
-            for ing in ingredientes_seleccionados
-        ]
-        fibra_coefs = [
-            master_ingredientes[ing]["fibra"]
-            for ing in ingredientes_seleccionados
-        ]
+        # Mapeo de bounds correspondientes a los activos
+        dict_bounds = {d["Ingrediente"]: d["bound"] for d in datos_maestros}
+        bounds = [dict_bounds[ing] for ing in ingredientes_activos]
 
         A_ub = [ne_coefs, lys_coefs, fibra_coefs]
         b_ub = [-min_ne, -min_sid_lys, max_fibra]
-        A_eq = [[1.0] * len(ingredientes_seleccionados)]
+        A_eq = [[1.0] * len(ingredientes_activos)]
         b_eq = [100.0]
-        bounds = [
-            master_ingredientes[ing]["bound"] for ing in ingredientes_seleccionados
-        ]
 
         res = linprog(
             c,
@@ -478,19 +413,15 @@ with tab_formulacion:
         if res.success:
             props = res.x
             costo_kg = res.fun / 100.0
-            st.success("✅ ¡Dieta optimizada dinámicamente con éxito!")
+            st.success("✅ ¡Dieta optimizada al mínimo costo con la selección actual!")
         else:
-            st.warning(
-                "⚠️ Los ingredientes seleccionados tienen restricciones estrictas. Se aplicó una solución equilibrada estándar:"
-            )
-            props = [100.0 / len(ingredientes_seleccionados)] * len(
-                ingredientes_seleccionados
-            )
-            costo_kg = sum(p * costos_ingredientes[ing] for p, ing in zip(props, ingredientes_seleccionados)) / 100.0
+            st.warning("⚠️ La combinación de ingredientes seleccionados es muy restrictiva. Se aplicó un balance comercial estándar:")
+            props = [100.0 / len(ingredientes_activos)] * len(ingredientes_activos)
+            costo_kg = sum(p * cost for p, cost in zip(props, c)) / 100.0
 
         df_formula = pd.DataFrame(
             {
-                "Materia Prima / Ingrediente": ingredientes_seleccionados,
+                "Materia Prima / Ingrediente": ingredientes_activos,
                 "Inclusión (%)": [round(p, 2) for p in props],
                 "Kg por Tonelada": [round(p * 10, 2) for p in props],
             }
@@ -693,7 +624,7 @@ def generar_pdf_reporte(
     pdf.cell(
         0,
         5,
-        "Documento generado automaticamente por Porcidex v6.3.",
+        "Documento generado automaticamente por Porcidex v6.4.",
         align="C",
     )
 
@@ -811,5 +742,5 @@ with tab_resumen:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v6.3 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v6.4 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
