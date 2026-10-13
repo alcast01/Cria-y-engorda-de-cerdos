@@ -146,7 +146,6 @@ thi_calculado = temp_amb - (0.55 - (0.55 * (hum_relativa / 100.0))) * (
     temp_amb - 14.4
 )
 
-# SEMÁFORO DE THI
 if thi_calculado > 78.0:
     badge_thi = '<span class="status-badge-red">🔴 PELIGRO: Estrés Calórico Crítico</span>'
 elif thi_calculado > 74.0:
@@ -303,7 +302,6 @@ with tab_engorda:
         consumo_total_cerdo = consumo_diario * dias_estudio
         consumo_total_lote = consumo_total_cerdo * num_animales
 
-        # DETERMINACIÓN DE SEMÁFOROS ZOOTÉCNICOS
         if gdp_ajustada >= 0.85:
             badge_gdp = '<span class="status-badge-green">🟢 ÓPTIMO: Crecimiento Rápido</span>'
         elif gdp_ajustada >= 0.60:
@@ -535,7 +533,7 @@ with tab_formulacion:
         
         st.table(df_form_filt)
         
-        st.success(f"秤 **Total Ración Balanceada:** `{df_form_filt['Inclusión (%)'].sum():.2f}%` = `{df_form_filt['Kg por Tonelada'].sum():.1f} kg / Tonelada`")
+        st.success(f"⚖️ **Total Ración Balanceada:** `{df_form_filt['Inclusión (%)'].sum():.2f}%` = `{df_form_filt['Kg por Tonelada'].sum():.1f} kg / Tonelada`")
 
         aportes_ne = sum((inc/100.0) * next(d["NE (kcal/kg)"] for d in datos_maestros if d["Ingrediente"] == ing) for inc, ing in zip(inclusions, ingredientes_activos))
         aportes_lys = sum((inc/100.0) * next(d["SID Lys (%)"] for d in datos_maestros if d["Ingrediente"] == ing) for inc, ing in zip(inclusions, ingredientes_activos))
@@ -559,7 +557,7 @@ with tab_formulacion:
 # ==========================================
 with tab_lactancia:
     st.subheader(
-        "🍼 Módulo Avanzado de Reproducción, Lactancia y Suplementación en Cerdas"
+        "🍼 Módulo Avanzado de Reproducción, Lactancia y Formulación de Dieta Especial para Cerdas"
     )
 
     col_l1, col_l2 = st.columns(2)
@@ -598,13 +596,11 @@ with tab_lactancia:
         f_par = 0.88 if "Primeriza" in paridad else (1.00 if "Multípara" in paridad else 0.95)
         consumo_base = (2.1 + (nacidos_vivos * 0.44)) * f_par
 
-        # Ajuste por condición corporal
         if "BCS 2.0" in condicion_corporal:
             consumo_base *= 1.05
         elif "BCS 4.0" in condicion_corporal:
             consumo_base *= 0.90
 
-        # Ajuste ambiental THI
         if thi_calculado > 74.0:
             consumo_base *= 1.0 - ((thi_calculado - 74.0) * 0.025)
 
@@ -613,47 +609,132 @@ with tab_lactancia:
         leche_total = peso_destete * lechones_destetados * 3.85
         leche_diaria = leche_total / dias_lac
 
-        # Métricas
         st.metric("Consumo Diario Sugerido (Cerda)", f"{consumo_base:.2f} kg/día")
         st.metric("Lechones Estimados al Destete", f"{lechones_destetados:.1f} lechones / camada")
         st.metric("Producción Láctea Total Estimada", f"{leche_total:,.1f} kg (`{leche_diaria:.1f} kg/día`)")
         st.metric("Consumo Total en Lactancia", f"{consumo_total_lac:,.1f} kg")
 
     st.markdown("---")
-    st.markdown("### 🧪 Insumos y Suplementos Especiales para Lactancia y Recuperación Reproductiva")
-    st.markdown("Ajuste los insumos nutracéuticos y funcionales para incorporar en el alimento de lactancia:")
+    st.markdown("### 🌾 Formulación de Dieta Específica para Cerdas en Lactancia")
+    st.markdown("Modifique los precios y disponibilidad de las materias primas e ingredientes funcionales para balancear automáticamente la ración de lactancia al mínimo costo.")
 
-    suplementos_default = [
-        {"Insumo / Suplemento": "L-Carnitina (Mobilización de Grasa)", "Activo": True, "Inclusión (kg/Ton)": 0.20, "Costo ($/kg)": 450.00, "Objetivo Fisiológico": "Mejora oxidación de ácidos grasos y energía láctea"},
-        {"Insumo / Suplemento": "Betaina Anhidra", "Activo": True, "Inclusión (kg/Ton)": 1.50, "Costo ($/kg)": 120.00, "Objetivo Fisiológico": "Osmoprotector y mitigación de estrés térmico (THI)"},
-        {"Insumo / Suplemento": "Aceite de Pescado / Omega-3 (EPA/DHA)", "Activo": True, "Inclusión (kg/Ton)": 3.00, "Costo ($/kg)": 85.00, "Objetivo Fisiológico": "Reducción de duración del parto y viabilidad del lechón"},
-        {"Insumo / Suplemento": "Aceite de Soya / Grasa Vegetal", "Activo": True, "Inclusión (kg/Ton)": 20.00, "Costo ($/kg)": 24.00, "Objetivo Fisiológico": "Densidad energética e incremento de sólidos en leche"},
-        {"Insumo / Suplemento": "Fitasa / Núcleo Enzimático Avanzado", "Activo": True, "Inclusión (kg/Ton)": 0.15, "Costo ($/kg)": 380.00, "Objetivo Fisiológico": "Preservación mineral ósea y liberación de Fósforo"},
-        {"Insumo / Suplemento": "Probióticos / Levadura Viva", "Activo": False, "Inclusión (kg/Ton)": 1.00, "Costo ($/kg)": 160.00, "Objetivo Fisiológico": "Estabilidad microbiota digestiva y prevención de estreñimiento"},
+    # Requerimientos específicos de lactancia
+    min_ne_lac, min_lys_lac, min_pc_lac, max_fibra_lac = 2450.0, 1.00, 18.5, 6.0
+
+    ingredientes_lactancia_db = [
+        {"Ingrediente": "Maíz Grano", "Disponible": True, "Costo ($/kg)": 5.50, "NE (kcal/kg)": 2650.0, "SID Lys (%)": 0.26, "PC (%)": 8.5, "Fibra (%)": 2.0, "bound": (20.0, 75.0), "base": 52.0},
+        {"Ingrediente": "Sorgo Grano", "Disponible": True, "Costo ($/kg)": 5.20, "NE (kcal/kg)": 2580.0, "SID Lys (%)": 0.22, "PC (%)": 10.0, "Fibra (%)": 2.2, "bound": (0.0, 50.0), "base": 0.0},
+        {"Ingrediente": "Pasta de Soya 48%", "Disponible": True, "Costo ($/kg)": 12.00, "NE (kcal/kg)": 2240.0, "SID Lys (%)": 2.85, "PC (%)": 48.0, "Fibra (%)": 7.0, "bound": (15.0, 38.0), "base": 28.0},
+        {"Ingrediente": "Salvado de Trigo", "Disponible": True, "Costo ($/kg)": 4.00, "NE (kcal/kg)": 1700.0, "SID Lys (%)": 0.65, "PC (%)": 15.0, "Fibra (%)": 11.0, "bound": (0.0, 8.0), "base": 3.0},
+        {"Ingrediente": "DDGS de Maíz", "Disponible": True, "Costo ($/kg)": 6.80, "NE (kcal/kg)": 2350.0, "SID Lys (%)": 0.65, "PC (%)": 27.0, "Fibra (%)": 8.5, "bound": (0.0, 10.0), "base": 4.0},
+        {"Ingrediente": "Aceite Vegetal / Grasa de Soya", "Disponible": True, "Costo ($/kg)": 22.00, "NE (kcal/kg)": 5800.0, "SID Lys (%)": 0.0, "PC (%)": 0.0, "Fibra (%)": 0.0, "bound": (1.0, 6.0), "base": 3.5},
+        {"Ingrediente": "L-Carnitina (Energía Láctea)", "Disponible": True, "Costo ($/kg)": 450.00, "NE (kcal/kg)": 0.0, "SID Lys (%)": 0.0, "PC (%)": 0.0, "Fibra (%)": 0.0, "bound": (0.02, 0.05), "base": 0.03},
+        {"Ingrediente": "Betaina Anhidra (Antiestrés)", "Disponible": True, "Costo ($/kg)": 120.00, "NE (kcal/kg)": 0.0, "SID Lys (%)": 0.0, "PC (%)": 0.0, "Fibra (%)": 0.0, "bound": (0.1, 0.2), "base": 0.15},
+        {"Ingrediente": "Aceite de Pescado (Omega-3)", "Disponible": True, "Costo ($/kg)": 85.00, "NE (kcal/kg)": 5500.0, "SID Lys (%)": 0.0, "PC (%)": 0.0, "Fibra (%)": 0.0, "bound": (0.0, 1.5), "base": 0.5},
+        {"Ingrediente": "Núcleo Cerdas Lactantes con Fitasa", "Disponible": True, "Costo ($/kg)": 42.00, "NE (kcal/kg)": 0.0, "SID Lys (%)": 0.0, "PC (%)": 0.0, "Fibra (%)": 0.0, "bound": (2.5, 4.0), "base": 3.0},
     ]
 
-    df_sup_base = pd.DataFrame(suplementos_default)
+    df_inv_lac = pd.DataFrame(ingredientes_lactancia_db)
 
-    df_sup_edit = st.data_editor(
-        df_sup_base,
+    df_edit_lac = st.data_editor(
+        df_inv_lac[["Ingrediente", "Disponible", "Costo ($/kg)", "NE (kcal/kg)", "SID Lys (%)", "PC (%)", "Fibra (%)"]],
         column_config={
-            "Insumo / Suplemento": st.column_config.TextColumn("Insumo / Suplemento", disabled=True),
-            "Activo": st.column_config.CheckboxColumn("Activo", default=True),
-            "Inclusión (kg/Ton)": st.column_config.NumberColumn("Inclusión (kg/Ton)", min_value=0.01, max_value=50.0, step=0.1, format="%.2f kg"),
-            "Costo ($/kg)": st.column_config.NumberColumn("Costo ($/kg)", min_value=1.0, max_value=2000.0, step=5.0, format="$%.2f"),
-            "Objetivo Fisiológico": st.column_config.TextColumn("Objetivo Fisiológico", disabled=True),
+            "Ingrediente": st.column_config.TextColumn("Ingrediente", disabled=True),
+            "Disponible": st.column_config.CheckboxColumn("Disponible", default=True),
+            "Costo ($/kg)": st.column_config.NumberColumn("Costo ($/kg)", min_value=0.10, max_value=2000.0, step=0.50, format="$%.2f"),
         },
+        disabled=["Ingrediente", "NE (kcal/kg)", "SID Lys (%)", "PC (%)", "Fibra (%)"],
         hide_index=True,
         use_container_width=True,
+        key="editor_lactancia_ing",
     )
 
-    df_sup_activos = df_sup_edit[df_sup_edit["Activo"] == True]
+    df_act_lac = df_edit_lac[df_edit_lac["Disponible"] == True]
 
-    if not df_sup_activos.empty:
-        costo_suplementacion_ton = sum(row["Inclusión (kg/Ton)"] * row["Costo ($/kg)"] for _, row in df_sup_activos.iterrows())
-        st.success(f"💊 **Costo Adicional de Suplementación Nutracéutica:** `${costo_suplementacion_ton:,.2f} MXN / Tonelada de Alimento`")
+    if df_act_lac.empty:
+        st.warning("⚠️ Seleccione al menos un ingrediente para formular la dieta de lactancia.")
     else:
-        st.info("💡 No se seleccionaron suplementos adicionales para la dieta de lactancia.")
+        ings_lac = df_act_lac["Ingrediente"].tolist()
+        c_lac = df_act_lac["Costo ($/kg)"].tolist()
+        
+        ne_c_l = [-float(r["NE (kcal/kg)"]) for _, r in df_act_lac.iterrows()]
+        lys_c_l = [-float(r["SID Lys (%)"]) for _, r in df_act_lac.iterrows()]
+        pc_c_l = [-float(r["PC (%)"]) for _, r in df_act_lac.iterrows()]
+        fib_c_l = [float(r["Fibra (%)"]) for _, r in df_act_lac.iterrows()]
+
+        bounds_l = [next(d["bound"] for d in ingredientes_lactancia_db if d["Ingrediente"] == ing) for ing in ings_lac]
+        bases_l = [next(d["base"] for d in ingredientes_lactancia_db if d["Ingrediente"] == ing) for ing in ings_lac]
+
+        res_l = linprog(
+            c_lac,
+            A_ub=[ne_c_l, lys_c_l, pc_c_l, fib_c_l],
+            b_ub=[-min_ne_lac, -min_lys_lac, -min_pc_lac, max_fibra_lac],
+            A_eq=[[1.0] * len(ings_lac)],
+            b_eq=[100.0],
+            bounds=bounds_l,
+            method="highs",
+        )
+
+        if not res_l.success:
+            res_l = linprog(
+                c_lac,
+                A_ub=[ne_c_l, lys_c_l, pc_c_l, fib_c_l],
+                b_ub=[-min_ne_lac * 0.85, -min_lys_lac * 0.85, -min_pc_lac * 0.85, max_fibra_lac * 1.30],
+                A_eq=[[1.0] * len(ings_lac)],
+                b_eq=[100.0],
+                bounds=bounds_l,
+                method="highs",
+            )
+
+        if res_l.success:
+            props_l = res_l.x
+            costo_kg_lac = res_l.fun / 100.0
+            st.success("✅ ¡Dieta de lactancia optimizada al mínimo costo!")
+        else:
+            if sum(bases_l) == 0:
+                bases_l = [100.0 / len(ings_lac)] * len(ings_lac)
+            props_l = [(p / sum(bases_l)) * 100.0 for p in bases_l]
+            costo_kg_lac = sum(p * cost for p, cost in zip(props_l, c_lac)) / 100.0
+            st.warning("⚠️ Ajuste comercial aplicado para garantizar el balance de lactancia.")
+
+        incs_l = [round(p, 2) for p in props_l]
+        diff_il = round(100.0 - sum(incs_l), 2)
+        if incs_l:
+            incs_l[0] = round(incs_l[0] + diff_il, 2)
+
+        kgs_l = [round(inc * 10.0, 1) for inc in incs_l]
+        diff_kl = round(1000.0 - sum(kgs_l), 1)
+        if kgs_l:
+            kgs_l[0] = round(kgs_l[0] + diff_kl, 1)
+
+        df_form_lac = pd.DataFrame(
+            {
+                "Materia Prima / Ingrediente": ings_lac,
+                "Inclusión (%)": incs_l,
+                "Kg por Tonelada": kgs_l,
+                "Costo ($/kg)": [f"${cost:.2f}" for cost in c_lac],
+                "Aporte ($/Ton)": [f"${round((inc/100.0)*cost*1000, 2):,.2f}" for inc, cost in zip(incs_l, c_lac)],
+            }
+        )
+        df_fl_filt = df_form_lac[df_form_lac["Inclusión (%)"] > 0.005]
+
+        st.table(df_fl_filt)
+        st.success(f"⚖️ **Total Ración Lactancia:** `{df_fl_filt['Inclusión (%)'].sum():.2f}%` = `{df_fl_filt['Kg por Tonelada'].sum():.1f} kg / Tonelada`")
+
+        aportes_ne_l = sum((inc/100.0) * next(d["NE (kcal/kg)"] for d in ingredientes_lactancia_db if d["Ingrediente"] == ing) for inc, ing in zip(incs_l, ings_lac))
+        aportes_lys_l = sum((inc/100.0) * next(d["SID Lys (%)"] for d in ingredientes_lactancia_db if d["Ingrediente"] == ing) for inc, ing in zip(incs_l, ings_lac))
+        aportes_pc_l = sum((inc/100.0) * next(d["PC (%)"] for d in ingredientes_lactancia_db if d["Ingrediente"] == ing) for inc, ing in zip(incs_l, ings_lac))
+
+        st.info(
+            f"📊 **Perfil Nutricional de la Dieta de Lactancia:**\n"
+            f"* **Energía Neta (NE):** `{aportes_ne_l:.0f} kcal/kg`\n"
+            f"* **Lisina SID:** `{aportes_lys_l:.2f}%`\n"
+            f"* **Proteína Cruda (PC):** `{aportes_pc_l:.1f}%`"
+        )
+
+        ml1, ml2 = st.columns(2)
+        ml1.metric("Costo Dieta Lactancia", f"${costo_kg_lac:.2f} MXN / kg")
+        ml2.metric("Costo Tonelada Lactancia", f"${costo_kg_lac * 1000:,.2f} MXN / Ton")
 
 # ==========================================
 # FUNCION GENERADORA DE PDF
