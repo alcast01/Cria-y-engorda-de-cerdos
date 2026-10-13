@@ -294,14 +294,14 @@ with tab_engorda:
         st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
 
 # ==========================================
-# PESTAÑA 2: FORMULACIÓN AVANZADA DINÁMICA CON TABLA INTERACTIVA
+# PESTAÑA 2: FORMULACIÓN AVANZADA DINÁMICA CON SUMA EXACTA AL 100%
 # ==========================================
 with tab_formulacion:
     st.subheader(
-        "🧮 Optimización Lineal Multi-Ingrediente con Selección en Lista Interactiva"
+        "🧮 Optimización Lineal Multi-Ingrediente (Suma Exacta al 100%)"
     )
     st.markdown(
-        "Marque o desmarque la casilla en la columna **'Disponible'** (ubicada entre Ingrediente y Costo) para activar o desactivar materias primas en el cálculo de la dieta."
+        "Marque o desmarque la casilla en la columna **'Disponible'** para activar o desactivar ingredientes. Las cantidades se calculan de manera que el total sume exactamente **100.00%** (**1,000 kg por tonelada**)."
     )
 
     col_f1, col_f2 = st.columns(2)
@@ -342,16 +342,13 @@ with tab_formulacion:
     df_inventario = pd.DataFrame(datos_maestros)
 
     st.markdown("### 📦 Inventario Interactivo de Almacén")
-    st.info("💡 **Instrucciones:** Haga clic en la casilla de la columna **'Disponible'** (entre *Ingrediente* y *Costo*) para incluir o excluir una materia prima.")
-
-    # Editor interactivo con la columna 'Disponible' posicionada entre 'Ingrediente' y 'Costo ($/kg)'
     df_editado = st.data_editor(
         df_inventario[["Ingrediente", "Disponible", "Costo ($/kg)", "NE (kcal/kg)", "SID Lys (%)", "Fibra (%)"]],
         column_config={
             "Ingrediente": st.column_config.TextColumn("Ingrediente", disabled=True),
             "Disponible": st.column_config.CheckboxColumn(
                 "Disponible",
-                help="Seleccione o deseleccione con un clic para incluir este ingrediente",
+                help="Seleccione o deseleccione con un clic",
                 default=True,
             ),
             "Costo ($/kg)": st.column_config.NumberColumn(
@@ -366,7 +363,6 @@ with tab_formulacion:
         use_container_width=True,
     )
 
-    # Filtrar únicamente ingredientes marcados como disponibles
     df_activos = df_editado[df_editado["Disponible"] == True]
 
     if df_activos.empty:
@@ -418,23 +414,34 @@ with tab_formulacion:
             props = [100.0 / len(ingredientes_activos)] * len(ingredientes_activos)
             costo_kg = sum(p * cost for p, cost in zip(props, c)) / 100.0
 
+        # Algoritmo de normalización y ajuste exacto para suma de 100.00% y 1000 kg exactos
+        inclusions = [round(p, 2) for p in props]
+        diff_inc = round(100.0 - sum(inclusions), 2)
+        if inclusions:
+            inclusions[-1] = round(inclusions[-1] + diff_inc, 2)
+
+        kgs = [round(p * 10.0, 1) for p in props]
+        diff_kg = round(1000.0 - sum(kgs), 1)
+        if kgs:
+            kgs[-1] = round(kgs[-1] + diff_kg, 1)
+
         df_formula = pd.DataFrame(
             {
                 "Materia Prima / Ingrediente": ingredientes_activos,
-                "Inclusión (%)": [round(p, 2) for p in props],
-                "Kg por Tonelada": [round(p * 10, 2) for p in props],
+                "Inclusión (%)": inclusions,
+                "Kg por Tonelada": kgs,
             }
         )
         df_form_filt = df_formula[df_formula["Inclusión (%)"] > 0.01]
+        
         st.table(df_form_filt)
+        
+        # Mostrar validación explícita del 100%
+        st.info(f"📊 **Suma Verificada de la Ración:** `{df_form_filt['Inclusión (%)'].sum():.2f}%` (`{df_form_filt['Kg por Tonelada'].sum():.1f} kg / Tonelada`)")
 
         m_c1, m_c2 = st.columns(2)
-        m_c1.metric(
-            "Costo de la Dieta", f"${costo_kg:.2f} MXN / kg de alimento"
-        )
-        m_c2.metric(
-            "Costo por Tonelada", f"${costo_kg * 1000:,.2f} MXN / Ton"
-        )
+        m_c1.metric("Costo de la Dieta", f"${costo_kg:.2f} MXN / kg de alimento")
+        m_c2.metric("Costo por Tonelada", f"${costo_kg * 1000:,.2f} MXN / Ton")
 
 # ==========================================
 # PESTAÑA 3: CERDAS EN LACTANCIA Y CRÍA
@@ -512,7 +519,6 @@ def generar_pdf_reporte(
     pdf = FPDF()
     pdf.add_page()
 
-    # Encabezado
     pdf.set_font("Helvetica", "B", 16)
     pdf.set_text_color(31, 78, 120)
     pdf.cell(0, 10, "PORCIDEX - REPORTE TECNICO Y COMERCIAL", ln=True, align="C")
@@ -596,7 +602,7 @@ def generar_pdf_reporte(
     # 3. TABLA DE FORMULACIÓN
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(31, 78, 120)
-    pdf.cell(0, 7, "3. FORMULACION DE LA DIETA OPTIMIZADA", ln=True)
+    pdf.cell(0, 7, "3. FORMULACION DE LA DIETA OPTIMIZADA (Suma 100%)", ln=True)
 
     pdf.set_font("Helvetica", "B", 9)
     pdf.set_fill_color(230, 230, 230)
@@ -610,7 +616,7 @@ def generar_pdf_reporte(
         for idx, row in df_form_filt.iterrows():
             ing = str(row["Materia Prima / Ingrediente"])
             inc = f"{row['Inclusión (%)']:.2f} %"
-            kg_ton = f"{row['Kg por Tonelada']:.2f} kg"
+            kg_ton = f"{row['Kg por Tonelada']:.1f} kg"
 
             pdf.cell(100, 6, ing, border=1)
             pdf.cell(40, 6, inc, border=1, align="C")
@@ -623,7 +629,7 @@ def generar_pdf_reporte(
     pdf.cell(
         0,
         5,
-        "Documento generado automaticamente por Porcidex v6.5.",
+        "Documento generado automaticamente por Porcidex v6.6.",
         align="C",
     )
 
@@ -741,5 +747,5 @@ with tab_resumen:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v6.5 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v6.6 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
