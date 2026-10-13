@@ -72,6 +72,30 @@ st.markdown(
         color: #f39c12;
         font-weight: 700;
     }
+    .status-badge-green {
+        background-color: #27ae60;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    .status-badge-orange {
+        background-color: #e67e22;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    .status-badge-red {
+        background-color: #c0392b;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-weight: bold;
+        display: inline-block;
+    }
     .report-card {
         background-color: #f8f9fa;
         padding: 1.2rem;
@@ -124,10 +148,17 @@ vel_aire = st.sidebar.slider(
 thi_calculado = temp_amb - (0.55 - (0.55 * (hum_relativa / 100.0))) * (
     temp_amb - 14.4
 )
-st.sidebar.info(
-    f"📊 **Índice THI Estimado:** `{thi_calculado:.1f}`\n\n"
-    f"*Estatus:* {'⚠️ Estrés Calórico Crítico' if thi_calculado > 78 else ('⚠️ Estrés Moderado' if thi_calculado > 74 else '✅ Confort Biológico')}"
-)
+
+# SEMÁFORO DE THI
+if thi_calculado > 78.0:
+    badge_thi = '<span class="status-badge-red">🔴 PELIGRO: Estrés Calórico Crítico</span>'
+elif thi_calculado > 74.0:
+    badge_thi = '<span class="status-badge-orange">🟠 PRECAUCIÓN: Estrés Moderado</span>'
+else:
+    badge_thi = '<span class="status-badge-green">🟢 ÓPTIMO: Confort Térmico</span>'
+
+st.sidebar.markdown(f"**Índice THI Estimado:** `{thi_calculado:.1f}`", unsafe_allow_html=True)
+st.sidebar.markdown(badge_thi, unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🏠 Alojamiento y Reto Sanitario")
@@ -177,12 +208,13 @@ tab_engorda, tab_formulacion, tab_lactancia, tab_resumen = st.tabs(
 )
 
 # ==========================================
-# PESTAÑA 1: ENGORDA, PLF Y BARRA DE GDP
+# PESTAÑA 1: ENGORDA, PLF Y BARRA DE GDP CON SEMÁFOROS
 # ==========================================
 with tab_engorda:
     st.subheader(
-        "Módulo de Simulación Dinámica, Ganadería de Precisión (PLF) y Estimación de Engorda"
+        "Módulo de Simulación Dinámica, Ganadería de Precisión (PLF) e Indicadores Zootécnicos"
     )
+    st.markdown("💡 *Guía visual para el productor: Los indicadores de color denotan el estado actual de la producción para tomar decisiones informadas.*")
 
     col_s1, col_s2 = st.columns([1, 2])
 
@@ -274,21 +306,55 @@ with tab_engorda:
         consumo_total_cerdo = consumo_diario * dias_estudio
         consumo_total_lote = consumo_total_cerdo * num_animales
 
-        st.markdown(f"### 📋 Estimación del Periodo de Engorda: **{etapa_eng}**")
+        # DETERMINACIÓN DE SEMÁFOROS ZOOTÉCNICOS
+        # Semáforo GDP
+        if gdp_ajustada >= 0.85:
+            badge_gdp = '<span class="status-badge-green">🟢 ÓPTIMO: Crecimiento Rápido</span>'
+        elif gdp_ajustada >= 0.60:
+            badge_gdp = '<span class="status-badge-orange">🟠 AJUSTAR: Crecimiento Moderado</span>'
+        else:
+            badge_gdp = '<span class="status-badge-red">🔴 PELIGRO: Crecimiento Deficiente</span>'
+
+        # Semáforo Conversión Alimenticia (CA)
+        if ca_ajustada <= 2.20:
+            badge_ca = '<span class="status-badge-green">🟢 ÓPTIMO: Alta Eficiencia</span>'
+        elif ca_ajustada <= 2.80:
+            badge_ca = '<span class="status-badge-orange">🟠 AJUSTAR: Eficiencia Aceptable</span>'
+        else:
+            badge_ca = '<span class="status-badge-red">🔴 PELIGRO: Ineficiencia / Desperdicio</span>'
+
+        # Semáforo Alojamiento
+        if "Óptimo" in espacio_vital:
+            badge_esp = '<span class="status-badge-green">🟢 ÓPTIMO: Bienestar Espacial</span>'
+        elif "Estándar" in espacio_vital:
+            badge_esp = '<span class="status-badge-orange">🟠 AJUSTAR: Espacio Límite</span>'
+        else:
+            badge_esp = '<span class="status-badge-red">🔴 PELIGRO: Hacinamiento Severo</span>'
+
+        # Semáforo Sanitario
+        if "Alto" in estatus_inmunologico:
+            badge_san = '<span class="status-badge-green">🟢 ÓPTIMO: Alta Bioseguridad</span>'
+        elif "Medio" in estatus_inmunologico:
+            badge_san = '<span class="status-badge-orange">🟠 AJUSTAR: Reto Sanitario Controlado</span>'
+        else:
+            badge_san = '<span class="status-badge-red">🔴 PELIGRO: Brote / Reto Severo</span>'
+
+        st.markdown(f"### 📋 Evaluador de Condición Zootécnica: **{etapa_eng}**")
+        
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric(
-            "GDP Operativa",
-            f"{gdp_ajustada:.2f} kg/d",
-            delta=f"Efecto ambiental: {factor_estres*100-100:.1f}%",
-        )
-        m2.metric(
-            "Conversión (CA)",
-            f"{ca_ajustada:.2f}",
-            delta=f"{((ca_ajustada - base_ca)/base_ca)*100:.1f}%",
-            delta_color="inverse",
-        )
-        m3.metric("Duración Engorda", f"{dias_estudio} días", delta=f"{ganancia_requerida:.1f} kg ganancia")
-        m4.metric("Consumo Diario / Cerdo", f"{consumo_diario:.2f} kg")
+        m1.metric("GDP Operativa", f"{gdp_ajustada:.2f} kg/d")
+        m2.metric("Conversión (CA)", f"{ca_ajustada:.2f}")
+        m3.metric("Duración Engorda", f"{dias_estudio} días")
+        m4.metric("Consumo Diario", f"{consumo_diario:.2f} kg")
+
+        st.markdown("#### 🚦 Semáforo de Producción y Puntos Críticos de Control:")
+        col_sem1, col_sem2 = st.columns(2)
+        with col_sem1:
+            st.markdown(f"* **Ganancia Diaria (GDP):** {badge_gdp}", unsafe_allow_html=True)
+            st.markdown(f"* **Conversión Alimenticia:** {badge_ca}", unsafe_allow_html=True)
+        with col_sem2:
+            st.markdown(f"* **Superficie Vital:** {badge_esp}", unsafe_allow_html=True)
+            st.markdown(f"* **Estatus Sanitario:** {badge_san}", unsafe_allow_html=True)
 
         st.markdown("---")
         col_res1, col_res2 = st.columns(2)
