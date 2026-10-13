@@ -5,7 +5,7 @@ import streamlit as st
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
-    page_title="Porcidex | Nutrición y Producción Porcina",
+    page_title="Porcidex | Nutrición y Producción Porcina de Precisión",
     page_icon="🐖",
     layout="wide",
 )
@@ -65,12 +65,69 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- NAVEGACIÓN POR PESTAÑAS ---
+# ==========================================
+# PANEL IZQUIERDO: VARIABLES DE PRODUCCIÓN CIENTÍFICA
+# ==========================================
+st.sidebar.header("🔬 Panel de Variables Zootécnicas y Ambientales")
+st.sidebar.markdown(
+    "*Parámetros basados en normativas y literatura científica internacional de porcicultura.*"
+)
+
+# 1. Selección de Módulo Principal
+modulo_activo = st.sidebar.selectbox(
+    "Seleccionar Módulo Operativo",
+    [
+        "📈 Engorda y Control Ambiental",
+        "🧮 Formulación al Mínimo Costo",
+        "🍼 Cerdas en Lactancia y Cría",
+    ],
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("🌡️ Ambiente y Estrés Térmico (ITH / THI)")
+temp_amb = st.sidebar.slider(
+    "Temperatura Ambiental (°C)", 10.0, 38.0, 24.0, 0.5
+)
+hum_relativa = st.sidebar.slider("Humedad Relativa (%)", 20.0, 95.0, 65.0, 5.0)
+vel_aire = st.sidebar.slider(
+    "Velocidad del Viento / Ventilación (m/s)", 0.0, 2.5, 0.3, 0.1
+)
+
+# Cálculo científico del Índice Temperatura-Humedad (THI adaptado para cerdos)
+# THI = Temp - [0.55 - (0.55 * Humedad/100)] * (Temp - 14.4)
+thi_calculado = temp_amb - (0.55 - (0.55 * (hum_relativa / 100.0))) * (
+    temp_amb - 14.4
+)
+st.sidebar.info(
+    f"📊 **Índice THI Estimado:** `{thi_calculado:.1f}`\n\n"
+    f"*Interpretación:* {'⚠️ Estrés Calórico Severo' if thi_calculado > 78 else ('⚠️ Estrés Moderado' if thi_calculado > 74 else '✅ Confort Térmico')}"
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("🏠 Alojamiento y Bioseguridad")
+densidad_alojamiento = st.sidebar.selectbox(
+    "Densidad de Alojamiento (Espacio por animal)",
+    [
+        "Óptimo (> 0.85 m²/cerdo finalización)",
+        "Moderado (0.70 - 0.85 m²/cerdo)",
+        "Hacinamiento / Alto (< 0.70 m²/cerdo)",
+    ],
+)
+estatus_sanitario = st.sidebar.selectbox(
+    "Estatus de Reto Sanitario en Granja",
+    [
+        "Alto Estatus / Alta Bioseguridad (Libre de patógenos respiratorios mayores)",
+        "Medio (Reto endémico controlado por vacunación)",
+        "Bajo (Presencia activa de PRRS / Complejo Respiratorio Porcino)",
+    ],
+)
+
+# --- NAVEGACIÓN POR PESTAÑAS PRINCIPALES ---
 tab_engorda, tab_formulacion, tab_lactancia = st.tabs(
     [
         "📈 Engorda y Control Ambiental",
         "🧮 Formulación al Mínimo Costo",
-        "🍼 Cerdas en Lactancia",
+        "🍼 Cerdas en Lactancia y Cría",
     ]
 )
 
@@ -85,33 +142,18 @@ with tab_engorda:
     col_s1, col_s2 = st.columns([1, 2])
 
     with col_s1:
-        st.markdown("### 🎛️ Parámetros del Lote")
-        etapa = st.selectbox(
+        st.markdown("### 📋 Configuración del Lote")
+        etapa_eng = st.selectbox(
             "Etapa Productiva",
             ["Iniciación", "Desarrollo y Crecimiento", "Finalización"],
-            key="etapa_eng",
         )
-        raza = st.selectbox(
+        raza_eng = st.selectbox(
             "Perfil Genético / Raza",
             [
                 "Comercial / Híbrido (Yorkshire x Landrace x Duroc)",
                 "Línea Materna (Landrace / Large White)",
                 "Línea Paterna (Duroc / Pietrain)",
             ],
-            key="raza_eng",
-        )
-
-        st.markdown("### 🌡️ Ambiente y Estrés Térmico")
-        temp_amb = st.slider(
-            "Temperatura Ambiental Promedio (°C)",
-            10.0,
-            38.0,
-            24.0,
-            0.5,
-            key="temp_eng",
-        )
-        humedad = st.slider(
-            "Humedad Relativa (%)", 30.0, 90.0, 65.0, 5.0, key="hum_eng"
         )
 
         peso_inicial = st.number_input(
@@ -120,10 +162,11 @@ with tab_engorda:
             max_value=110.0,
             value=(
                 15.0
-                if etapa == "Iniciación"
-                else (35.0 if etapa == "Desarrollo y Crecimiento" else 70.0)
+                if etapa_eng == "Iniciación"
+                else (
+                    35.0 if etapa_eng == "Desarrollo y Crecimiento" else 70.0
+                )
             ),
-            key="pi_eng",
         )
         peso_objetivo = st.number_input(
             "Peso Objetivo / Salida (kg)",
@@ -131,27 +174,25 @@ with tab_engorda:
             max_value=130.0,
             value=(
                 35.0
-                if etapa == "Iniciación"
-                else (70.0 if etapa == "Desarrollo y Crecimiento" else 115.0)
+                if etapa_eng == "Iniciación"
+                else (
+                    70.0 if etapa_eng == "Desarrollo y Crecimiento" else 115.0
+                )
             ),
-            key="pf_eng",
         )
         num_animales = st.number_input(
-            "Número de Animales en el Lote",
-            min_value=1,
-            max_value=2000,
-            value=100,
-            key="n_eng",
+            "Número de Animales en el Lote", min_value=1, max_value=2000, value=100
         )
 
     with col_s2:
-        if etapa == "Iniciación":
+        # Valores base según etapa
+        if etapa_eng == "Iniciación":
             temp_optima = 24.0
             base_gdp = 0.65
             base_ca = 1.55
             base_pc = 21.0
             base_em = 3300
-        elif etapa == "Desarrollo y Crecimiento":
+        elif etapa_eng == "Desarrollo y Crecimiento":
             temp_optima = 20.0
             base_gdp = 0.90
             base_ca = 2.30
@@ -164,17 +205,39 @@ with tab_engorda:
             base_pc = 14.5
             base_em = 3100
 
+        # Ajuste multivariable científico por Estrés Térmico (THI) y Ventilación
         diff_temp = temp_amb - temp_optima
         factor_estres = 1.0
         if diff_temp > 2.0:
-            factor_estres = max(0.70, 1.0 - ((diff_temp - 2.0) * 0.03))
+            # Reducción de consumo y ganancia por calor ajustado por velocidad del aire
+            mitigacion_viento = min(0.15, vel_aire * 0.08)
+            factor_estres = max(
+                0.65,
+                1.0
+                - (((diff_temp - 2.0) * 0.035) - mitigacion_viento),
+            )
         elif diff_temp < -3.0:
             factor_estres = max(0.85, 1.0 - (abs(diff_temp + 3.0) * 0.015))
 
-        if "Paterna" in raza:
+        # Ajustes por Densidad de Alojamiento
+        if "Moderado" in densidad_alojamiento:
+            base_gdp *= 0.97
+        elif "Hacinamiento" in densidad_alojamiento:
+            base_gdp *= 0.90
+            base_ca *= 1.08   empeora conversión
+
+        # Ajustes por Estatus Sanitario
+        if "Medio" in estatus_sanitario:
+            base_gdp *= 0.95
+        elif "Bajo" in estatus_sanitario:
+            base_gdp *= 0.85
+            base_ca *= 1.15
+
+        # Ajustes Genéticos
+        if "Paterna" in raza_eng:
             base_gdp *= 1.08
             base_ca *= 0.95
-        elif "Materna" in raza:
+        elif "Materna" in raza_eng:
             base_gdp *= 0.96
 
         gdp_ajustada = base_gdp * factor_estres
@@ -187,12 +250,12 @@ with tab_engorda:
             consumo_diario_estimado * dias_estudio * num_animales
         )
 
-        st.markdown(f"### 📋 Resultados de Modelación: **{etapa}**")
+        st.markdown(f"### 📋 Resultados Ajustados: **{etapa_eng}**")
         m1, m2, m3, m4 = st.columns(4)
         m1.metric(
             "Ganancia Diaria (GDP)",
             f"{gdp_ajustada:.2f} kg/d",
-            delta=f"{((gdp_ajustada - base_gdp)/base_gdp)*100:.1f}% amb",
+            delta=f"{((gdp_ajustada - base_gdp)/base_gdp)*100:.1f}% multifactorial",
         )
         m2.metric(
             "Conversión (CA)",
@@ -208,25 +271,23 @@ with tab_engorda:
         with c_nutri:
             st.info(
                 f"""
-            **Nutrición Sugerida:**
+            **Perfil Nutricional Recomendado:**
             * **Proteína Cruda:** {base_pc:.1f}%
             * **Energía Metabolizable:** {base_em} kcal/kg
-            * **Alimento Total Lote:** {consumo_total_lote:,.1f} kg ({round(consumo_total_lote/40)} sacos de 40kg)
+            * **Alimento Total Requerido:** {consumo_total_lote:,.1f} kg ({round(consumo_total_lote/40)} sacos de 40 kg)
             """
             )
         with c_amb:
-            if diff_temp > 3.0:
+            if thi_calculado > 76:
                 st.warning(
-                    f"⚠️ **Alerta Estrés Calórico:** Temperatura ({temp_amb}°C) sobre confort ({temp_optima}°C). Evaluar ventilación o densidad energética."
-                )
-            elif diff_temp < -3.0:
-                st.info(
-                    f"❄️ **Alerta Estrés por Frío:** Temperatura baja ({temp_amb}°C). Mayor demanda energética."
+                    f"⚠️ **Alerta Biológica (THI {thi_calculado:.1f}):** Alto riesgo de estrés calórico. Se recomienda elevar densidad energética de la dieta y optimizar velocidad de aire (>1.5 m/s)."
                 )
             else:
-                st.success("✅ **Zona de Confort Óptima**")
+                st.success(
+                    f"✅ **Condiciones Óptimas (THI {thi_calculado:.1f}):** El entorno zootécnico favorece el desempeño del lote."
+                )
 
-        st.markdown("### 📈 Proyección de Crecimiento")
+        st.markdown("### 📈 Proyección de Crecimiento Semanal")
         semanas = np.arange(1, dias_estudio + 1, 7)
         pesos_proyectados = [
             min(peso_objetivo, peso_inicial + (gdp_ajustada * d)) for d in semanas
@@ -261,6 +322,7 @@ with tab_formulacion:
                 "Finalización",
                 "Cerdas de Recría (Desarrollo/Remonta)",
             ],
+            key="req_form",
         )
 
     if req_etapa == "Iniciación":
@@ -365,20 +427,33 @@ with tab_formulacion:
             )
 
 # ==========================================
-# PESTAÑA 3: CERDAS EN LACTANCIA
+# PESTAÑA 3: CERDAS EN LACTANCIA Y CRÍA
 # ==========================================
 with tab_lactancia:
-    st.subheader("🍼 Módulo de Nutrición y Manejo de Cerdas en Lactancia")
+    st.subheader(
+        "🍼 Módulo de Nutrición, Cría y Soporte Metabólico en Cerdas Lactantes"
+    )
     st.markdown(
-        "Garantiza el éxito de la camada mediante el soporte metabólico de la cerda lactante, previniendo la pérdida excesiva de condición corporal y maximizando la producción láctea."
+        "Optimización del rendimiento reproductivo y lácteo de la cerda, integrando el impacto del entorno térmico sobre la supervivencia y ganancia de la camada."
     )
 
     col_l1, col_l2 = st.columns(2)
 
     with col_l1:
-        st.markdown("### 📋 Datos del Parto y Camada")
+        st.markdown("### 📋 Variables Reproductivas y de Cría")
+        paridad_cerda = st.selectbox(
+            "Número de Paridad de la Cerda",
+            [
+                "Primeriza (Paridad 1 - Mayor sensibilidad metabólica)",
+                "Multípara (Paridad 2 a 5 - Pico productivo)",
+                "Longevidad (> Paridad 6)",
+            ],
+        )
         num_nacidos_vivos = st.number_input(
-            "Lechones Nacidos Vivos", min_value=4, max_value=22, value=12
+            "Lechones Nacidos Vivos en Camada",
+            min_value=4,
+            max_value=22,
+            value=12,
         )
         dias_lactancia = st.slider(
             "Duración de la Lactancia (Días)", 14, 35, 21
@@ -386,57 +461,20 @@ with tab_lactancia:
         peso_destete_objetivo = st.number_input(
             "Peso Objetivo por Lechón al Destete (kg)", 5.0, 9.0, 6.5
         )
-        temp_sala_parto = st.slider(
-            "Temperatura en Sala de Parto (°C)", 18.0, 28.0, 22.0, 0.5
-        )
 
     with col_l2:
-        st.markdown("### 📊 Estimación de Requerimientos y Consumo")
+        st.markdown("### 📊 Estimación Biológica y Ajuste por ITH")
 
-        consumo_diario_cerda = 2.0 + (num_nacidos_vivos * 0.42)
-        if temp_sala_parto > 24.0:
-            consumo_diario_cerda *= 1.0 - ((temp_sala_parto - 24.0) * 0.04)
+        # Ajuste de consumo de la cerda por paridad y estrés térmico
+        factor_paridad = 0.90 if "Primeriza" in paridad_cerda else 1.00
+        consumo_diario_cerda = (2.0 + (num_nacidos_vivos * 0.42)) * factor_paridad
+
+        if thi_calculado > 74.0:
+            # Depresión de consumo por calor en lactancia
+            consumo_diario_cerda *= 1.0 - ((thi_calculado - 74.0) * 0.025)
 
         consumo_total_lactancia = consumo_diario_cerda * dias_lactancia
         leche_producida_estimada = peso_destete_objetivo * num_nacidos_vivos * 3.8
 
         st.metric(
-            label="Consumo Diario Sugerido para la Cerda",
-            value=f"{consumo_diario_cerda:.2f} kg/día",
-        )
-        st.metric(
-            label="Consumo Total Acumulado en Lactancia",
-            value=f"{consumo_total_lactancia:,.1f} kg",
-        )
-        st.metric(
-            label="Producción Láctea Estimada Total",
-            value=f"{leche_producida_estimada:,.1f} kg de leche",
-        )
-
-    st.markdown("---")
-    st.markdown("### 💡 Recomendaciones Clave para la Supervivencia de la Cría")
-
-    col_rec1, col_rec2 = st.columns(2)
-    with col_rec1:
-        st.info(
-            """
-        * **Perfil Nutricional en Lactancia:**
-          * **Proteína Cruda:** 17.0% - 18.5% (con mínimo 0.95% de Lisina digestible).
-          * **Energía Metabolizable:** 3,300 - 3,400 kcal/kg para evitar catabolismo excesivo de reservas corporales.
-          * **Fibra Funcional:** 5% a 6% para prevenir estreñimiento periparto y fomentar motilidad intestinal.
-        """
-        )
-    with col_rec2:
-        st.success(
-            """
-        * **Manejo Ambiental y del Lechón:**
-          * **Zona de Confort del Lechón:** Mantener nidos con lámparas o placas térmicas a **32°C - 34°C** la primera semana, reduciendo gradualmente.
-          * **Agua Ad Libitum:** Una cerda lactante requiere de **25 a 35 litros de agua fresca diarios** para un óptimo reflejo de eyección láctea.
-          * **Fraccionamiento:** Suministrar alimento mínimo 3 a 4 veces al día para estimular el apetito en climas cálidos.
-        """
-        )
-
-st.markdown("---")
-st.caption(
-    "Porcidex v3.1 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
-)
+            label="Consumo Diario Sugerido para
