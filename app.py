@@ -94,7 +94,6 @@ vel_aire = st.sidebar.slider(
 )
 
 # Cálculo científico del Índice Temperatura-Humedad (THI adaptado para cerdos)
-# THI = Temp - [0.55 - (0.55 * Humedad/100)] * (Temp - 14.4)
 thi_calculado = temp_amb - (0.55 - (0.55 * (hum_relativa / 100.0))) * (
     temp_amb - 14.4
 )
@@ -185,7 +184,6 @@ with tab_engorda:
         )
 
     with col_s2:
-        # Valores base según etapa
         if etapa_eng == "Iniciación":
             temp_optima = 24.0
             base_gdp = 0.65
@@ -209,7 +207,6 @@ with tab_engorda:
         diff_temp = temp_amb - temp_optima
         factor_estres = 1.0
         if diff_temp > 2.0:
-            # Reducción de consumo y ganancia por calor ajustado por velocidad del aire
             mitigacion_viento = min(0.15, vel_aire * 0.08)
             factor_estres = max(
                 0.65,
@@ -224,7 +221,7 @@ with tab_engorda:
             base_gdp *= 0.97
         elif "Hacinamiento" in densidad_alojamiento:
             base_gdp *= 0.90
-            base_ca *= 1.08   empeora conversión
+            base_ca *= 1.08  # empeora conversión
 
         # Ajustes por Estatus Sanitario
         if "Medio" in estatus_sanitario:
@@ -465,12 +462,10 @@ with tab_lactancia:
     with col_l2:
         st.markdown("### 📊 Estimación Biológica y Ajuste por ITH")
 
-        # Ajuste de consumo de la cerda por paridad y estrés térmico
         factor_paridad = 0.90 if "Primeriza" in paridad_cerda else 1.00
         consumo_diario_cerda = (2.0 + (num_nacidos_vivos * 0.42)) * factor_paridad
 
         if thi_calculado > 74.0:
-            # Depresión de consumo por calor en lactancia
             consumo_diario_cerda *= 1.0 - ((thi_calculado - 74.0) * 0.025)
 
         consumo_total_lactancia = consumo_diario_cerda * dias_lactancia
@@ -509,7 +504,7 @@ with tab_lactancia:
             """
         * **Manejo del Lechón y Bioseguridad:**
           * **Temperatura en Nido:** 32°C - 34°C en la primera semana de vida, con reducción gradual de 2°C por semana.
-          * **Hidratación de la Cerda:** Suministro de **25 a 35 litros de agua fresca** al día para asegurar el reflejo de bajada de leche.
+          * **Hidratación de la Cerda:** Suministró de **25 a 35 litros de agua fresca** al día para asegurar el reflejo de bajada de leche.
           * **Manejo de Calostro:** Garantizar una ingesta mínima de 200-250 g de calostro por lechón en sus primeras 6 horas de vida.
         """
         )
