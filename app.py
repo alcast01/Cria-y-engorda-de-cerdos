@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- ESTILOS CSS PERSONALIZADOS Y LOGOTIPO EMBLEMÁTICO MEJORADO ---
+# --- ESTILOS CSS PERSONALIZADOS Y LOGOTIPO EMBLEMÁTICO ---
 st.markdown(
     """
     <style>
@@ -84,15 +84,15 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- CABECERA CON LOGOTIPO, VERSIÓN Y NÚMERO DE SERIE ---
+# --- CABECERA CON LOGOTIPO EN ESPAÑOL, VERSIÓN Y NÚMERO DE SERIE ---
 st.markdown(
     """
     <div class="brand-container">
-        <div class="brand-logo-badge">🐖 🧬 PRECISION SWINE NUTRITION & PLF SYSTEMS</div>
+        <div class="brand-logo-badge">🐖 🧬 SISTEMAS DE NUTRICIÓN PORCINA DE PRECISIÓN Y PLF</div>
         <h1 class="brand-title">PORCIDEX™</h1>
         <p class="brand-slogan">"Ciencia, Innovación y Precisión al Servicio de la Porcicultura Moderna"</p>
         <div class="meta-info-container">
-            <span>Versión: <strong class="meta-item">v7.0 Pro</strong></span>
+            <span>Versión: <strong class="meta-item">v1.0 Pro</strong></span>
             <span>•</span>
             <span>Nº de Serie: <strong class="meta-item">PRX-2026-MX-9842</strong></span>
             <span>•</span>
@@ -577,7 +577,7 @@ def generar_pdf_reporte(
 
     pdf.set_font("Helvetica", "I", 9)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 4, "Version: v7.0 Pro | S/N: PRX-2026-MX-9842", ln=True, align="C")
+    pdf.cell(0, 4, "Version: v1.0 Pro | S/N: PRX-2026-MX-9842", ln=True, align="C")
     pdf.cell(0, 5, "Creado y desarrollado por el Dr. Alejandro Castaneda Correa", ln=True, align="C")
     pdf.ln(3)
 
@@ -672,7 +672,7 @@ def generar_pdf_reporte(
     pdf.cell(
         0,
         5,
-        "Porcidex v7.0 Pro | S/N: PRX-2026-MX-9842 | Dr. Alejandro Castaneda Correa",
+        "Porcidex v1.0 Pro | S/N: PRX-2026-MX-9842 | Dr. Alejandro Castaneda Correa",
         align="C",
     )
 
@@ -790,5 +790,5 @@ with tab_resumen:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v7.0 Pro | S/N: PRX-2026-MX-9842 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v1.0 Pro | S/N: PRX-2026-MX-9842 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
