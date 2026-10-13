@@ -477,4 +477,44 @@ with tab_lactancia:
         leche_producida_estimada = peso_destete_objetivo * num_nacidos_vivos * 3.8
 
         st.metric(
-            label="Consumo Diario Sugerido para
+            label="Consumo Diario Sugerido para la Cerda",
+            value=f"{consumo_diario_cerda:.2f} kg/día",
+        )
+        st.metric(
+            label="Consumo Total Acumulado en Lactancia",
+            value=f"{consumo_total_lactancia:,.1f} kg",
+        )
+        st.metric(
+            label="Producción Láctea Estimada Total",
+            value=f"{leche_producida_estimada:,.1f} kg de leche",
+        )
+
+    st.markdown("---")
+    st.markdown(
+        "### 💡 Recomendaciones Científicas para el Éxito de la Cría"
+    )
+
+    col_rec1, col_rec2 = st.columns(2)
+    with col_rec1:
+        st.info(
+            """
+        * **Nutrición de Precisión en Lactancia:**
+          * **Proteína Cruda:** 17.5% - 18.5% (con mínimo 1.0% de Lisina estandarizada ileal digestible).
+          * **Energía Metabolizable:** 3,350 kcal/kg para contrarrestar el balance energético negativo (BEN).
+          * **Fibra Funcional:** 6% para estimular tránsito gastrointestinal y prevenir el síndrome MMA (Mastitis-Metritis-Agalactia).
+        """
+        )
+    with col_rec2:
+        st.success(
+            """
+        * **Manejo del Lechón y Bioseguridad:**
+          * **Temperatura en Nido:** 32°C - 34°C en la primera semana de vida, con reducción gradual de 2°C por semana.
+          * **Hidratación de la Cerda:** Suministro de **25 a 35 litros de agua fresca** al día para asegurar el reflejo de bajada de leche.
+          * **Manejo de Calostro:** Garantizar una ingesta mínima de 200-250 g de calostro por lechón en sus primeras 6 horas de vida.
+        """
+        )
+
+st.markdown("---")
+st.caption(
+    "Porcidex v4.0 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+)
