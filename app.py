@@ -495,7 +495,7 @@ with tab_lactancia:
         st.metric("Producción Láctea Total Estimada", f"{leche_total:,.1f} kg")
 
 # ==========================================
-# FUNCION GENERADORA DE PDF (FPDF2)
+# FUNCION GENERADORA DE PDF (CORREGIDA)
 # ==========================================
 def generar_pdf_reporte(
     etapa_eng,
@@ -522,53 +522,37 @@ def generar_pdf_reporte(
     pdf.add_page()
 
     # Encabezado
-    pdf.set_font("Helvetica", "B", 18)
-    pdf.set_text_color(31, 78, 120)  # #1f4e78
-    pdf.cell(
-        0,
-        10,
-        "PORCIDEX - REPORTE TECNICO Y COMERCIAL",
-        new_x="LMARGIN",
-        new_y="NEXT",
-        align="C",
-    )
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.set_text_color(31, 78, 120)
+    pdf.cell(0, 10, "PORCIDEX - REPORTE TECNICO Y COMERCIAL", ln=True, align="C")
 
     pdf.set_font("Helvetica", "I", 10)
     pdf.set_text_color(100, 100, 100)
     pdf.cell(
         0,
-        6,
+        5,
         "Ciencia y Precision al Servicio de la Porcicultura Moderna",
-        new_x="LMARGIN",
-        new_y="NEXT",
+        ln=True,
         align="C",
     )
     pdf.cell(
         0,
-        6,
+        5,
         "Creado y desarrollado por el Dr. Alejandro Castaneda Correa",
-        new_x="LMARGIN",
-        new_y="NEXT",
+        ln=True,
         align="C",
     )
-    pdf.ln(5)
+    pdf.ln(4)
 
-    # Linea separadora
+    # Linea separadora (Sintaxis compatible universal)
     pdf.set_draw_color(31, 78, 120)
-    pdf.set_linewidth(0.8)
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(5)
+    pdf.ln(6)
 
-    # 1. RESUMEN EJECUTIVO PARA EL PRODUCUTOR
+    # 1. RESUMEN EJECUTIVO PARA EL PRODUCTOR
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(31, 78, 120)
-    pdf.cell(
-        0,
-        8,
-        "1. RESUMEN EJECUTIVO (PRODUCTOR / PORCICULTOR)",
-        new_x="LMARGIN",
-        new_y="NEXT",
-    )
+    pdf.cell(0, 7, "1. RESUMEN EJECUTIVO (PRODUCTOR / PORCICULTOR)", ln=True)
 
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(0, 0, 0)
@@ -591,20 +575,14 @@ def generar_pdf_reporte(
     ]
 
     for item in prod_text:
-        pdf.cell(0, 5, f"- {item}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 5, f"- {item}", ln=True)
 
-    pdf.ln(5)
+    pdf.ln(4)
 
-    # 2. RESUMEN TECNICO PARA EL NUTRIOLOGO / MVZ
+    # 2. RESUMEN TÉCNICO PARA EL NUTRIÓLOGO / MVZ
     pdf.set_font("Helvetica", "B", 12)
-    pdf.set_text_color(46, 125, 50)  # #2e7d32
-    pdf.cell(
-        0,
-        8,
-        "2. RESUMEN TECNICO (NUTRIOLOGO / VETERINARIO)",
-        new_x="LMARGIN",
-        new_y="NEXT",
-    )
+    pdf.set_text_color(46, 125, 50)
+    pdf.cell(0, 7, "2. RESUMEN TECNICO (NUTRIOLOGO / VETERINARIO)", ln=True)
 
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(0, 0, 0)
@@ -621,20 +599,14 @@ def generar_pdf_reporte(
     ]
 
     for item in nutri_text:
-        pdf.cell(0, 5, f"- {item}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 5, f"- {item}", ln=True)
 
-    pdf.ln(5)
+    pdf.ln(4)
 
-    # 3. TABLA DE FORMULACION
+    # 3. TABLA DE FORMULACIÓN
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(31, 78, 120)
-    pdf.cell(
-        0,
-        8,
-        "3. FORMULACION DE LA DIETA OPTIMIZADA",
-        new_x="LMARGIN",
-        new_y="NEXT",
-    )
+    pdf.cell(0, 7, "3. FORMULACION DE LA DIETA OPTIMIZADA", ln=True)
 
     pdf.set_font("Helvetica", "B", 9)
     pdf.set_fill_color(230, 230, 230)
@@ -654,13 +626,13 @@ def generar_pdf_reporte(
         pdf.cell(45, 6, kg_ton, border=1, align="C")
         pdf.ln()
 
-    pdf.ln(10)
+    pdf.ln(8)
     pdf.set_font("Helvetica", "I", 8)
     pdf.set_text_color(120, 120, 120)
     pdf.cell(
         0,
         5,
-        "Documento generado automaticamente por Porcidex v6.1.",
+        "Documento generado automaticamente por Porcidex v6.2.",
         align="C",
     )
 
@@ -746,7 +718,6 @@ with tab_resumen:
     st.markdown("---")
     st.subheader("🖨️ Descargar e Imprimir Reporte en PDF")
 
-    # Generar bytes del archivo PDF
     pdf_bytes = generar_pdf_reporte(
         etapa_eng,
         raza_eng,
@@ -779,5 +750,5 @@ with tab_resumen:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v6.1 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v6.2 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
