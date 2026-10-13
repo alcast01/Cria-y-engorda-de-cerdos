@@ -142,18 +142,18 @@ monitoreo_acustico = st.sidebar.checkbox(
 tab_engorda, tab_formulacion, tab_lactancia, tab_resumen = st.tabs(
     [
         "📈 Engorda, PLF y Control Térmico",
-        "🧮 Formulación Avanzada (NE, SID & Fitasa)",
+        "🧮 Formulación Avanzada (Precios e Insumos)",
         "🍼 Cerdas en Lactancia y Cría",
         "📋 Resumen Técnico y Comercial",
     ]
 )
 
 # ==========================================
-# PESTAÑA 1: ENGORDA, PLF Y CONTROL TÉRMICO
+# PESTAÑA 1: ENGORDA, PLF Y BARRA DE GDP
 # ==========================================
 with tab_engorda:
     st.subheader(
-        "Módulo de Simulación Dinámica y Ganadería de Precisión (PLF)"
+        "Módulo de Simulación Dinámica, Ganadería de Precisión (PLF) y Estimación de Engorda"
     )
 
     col_s1, col_s2 = st.columns([1, 2])
@@ -183,22 +183,34 @@ with tab_engorda:
             "Tamaño del Lote (Animales)", 1, 5000, 200
         )
 
+        st.markdown("---")
+        st.markdown("### ⚡ Ajuste Manual de Ganancia Diaria de Peso (GDP)")
+        
+        # Sugerencia base por etapa
+        base_gdp_def = 0.68 if etapa_eng == "Iniciación" else (0.95 if etapa_eng == "Desarrollo y Crecimiento" else 1.10)
+        
+        gdp_manual = st.slider(
+            "Ajustar Ganancia Diaria de Peso Objetivo (kg/día)",
+            min_value=0.30,
+            max_value=1.50,
+            value=float(base_gdp_def),
+            step=0.01,
+            help="Deslice la barra para ajustar la velocidad de crecimiento esperada y estimar la duración total de la engorda.",
+        )
+
     with col_s2:
         if etapa_eng == "Iniciación":
             temp_optima = 24.0
-            base_gdp = 0.68
             base_ca = 1.50
             base_pc = 20.5
             base_ne = 2550
         elif etapa_eng == "Desarrollo y Crecimiento":
             temp_optima = 20.0
-            base_gdp = 0.95
             base_ca = 2.20
             base_pc = 17.0
             base_ne = 2480
         else:
             temp_optima = 18.0
-            base_gdp = 1.10
             base_ca = 2.75
             base_pc = 14.0
             base_ne = 2400
@@ -209,45 +221,39 @@ with tab_engorda:
             mitigacion_viento = min(0.18, vel_aire * 0.09)
             factor_estres = max(
                 0.60,
-                1.0
-                - (((diff_temp - 2.0) * 0.038) - mitigacion_viento),
+                1.0 - (((diff_temp - 2.0) * 0.038) - mitigacion_viento),
             )
         elif diff_temp < -3.0:
             factor_estres = max(0.82, 1.0 - (abs(diff_temp + 3.0) * 0.015))
 
         if "Estándar" in espacio_vital:
-            base_gdp *= 0.97
+            base_ca *= 1.03
         elif "Hacinamiento" in espacio_vital:
-            base_gdp *= 0.88
             base_ca *= 1.12
 
         if "Medio" in estatus_inmunologico:
-            base_gdp *= 0.94
             base_ca *= 1.05
         elif "Bajo" in estatus_inmunologico:
-            base_gdp *= 0.82
             base_ca *= 1.20
 
         if uso_pfs:
             base_ca *= 0.92
-        if uso_vision_3d:
-            base_gdp *= 1.03
 
-        gdp_ajustada = base_gdp * factor_estres
+        # CÁLCULO DE DURACIÓN DE ENGORDA Y CONSUMOS BASADO EN GDP SELECCIONADA
+        gdp_ajustada = gdp_manual * factor_estres
         ca_ajustada = base_ca / factor_estres
-        dias_estudio = max(
-            1, round((peso_objetivo - peso_inicial) / max(0.1, gdp_ajustada))
-        )
+        ganancia_requerida = max(0.1, peso_objetivo - peso_inicial)
+        dias_estudio = max(1, round(ganancia_requerida / max(0.05, gdp_ajustada)))
         consumo_diario = gdp_ajustada * ca_ajustada
         consumo_total_cerdo = consumo_diario * dias_estudio
         consumo_total_lote = consumo_total_cerdo * num_animales
 
-        st.markdown(f"### 📋 Resultados del Gemelo Digital: **{etapa_eng}**")
+        st.markdown(f"### 📋 Estimación del Periodo de Engorda: **{etapa_eng}**")
         m1, m2, m3, m4 = st.columns(4)
         m1.metric(
-            "GDP Ajustada",
+            "GDP Operativa",
             f"{gdp_ajustada:.2f} kg/d",
-            delta=f"{((gdp_ajustada - base_gdp)/base_gdp)*100:.1f}% mod",
+            delta=f"Efecto ambiental: {factor_estres*100-100:.1f}%",
         )
         m2.metric(
             "Conversión (CA)",
@@ -255,7 +261,7 @@ with tab_engorda:
             delta=f"{((ca_ajustada - base_ca)/base_ca)*100:.1f}%",
             delta_color="inverse",
         )
-        m3.metric("Días al Objetivo", f"{dias_estudio} días")
+        m3.metric("Duración Engorda", f"{dias_estudio} días", delta=f"{ganancia_requerida:.1f} kg ganancia")
         m4.metric("Consumo Diario / Cerdo", f"{consumo_diario:.2f} kg")
 
         st.markdown("---")
@@ -263,11 +269,10 @@ with tab_engorda:
         with col_res1:
             st.info(
                 f"""
-            **Impacto Tecnológico PLF & Nutrición:**
-            * **Ahorro Estimado por PFS (RFID):** `~{10 if uso_pfs else 0}%` en costo de alimento.
-            * **Monitoreo Acústico / Bioseguridad:** {'Activado (Alerta de tos y agua en tiempo real)' if monitoreo_acustico else 'Desactivado'}.
-            * **Biometría 3D:** Margen de error de pesaje < 1.2 kg.
-            * **Alimento Total Requerido:** {consumo_total_lote:,.1f} kg.
+            **Resumen Logístico del Lote:**
+            * **Días Estimados a Mercado:** `{dias_estudio} días` ({round(dias_estudio/30, 1)} meses).
+            * **Consumo Total de Alimento por Cerdo:** `{consumo_total_cerdo:.1f} kg`.
+            * **Requerimiento Total del Lote ({num_animales:,} cerdos):** `{consumo_total_lote:,.1f} kg` (`{round(consumo_total_lote/40):,} sacos de 40 kg`).
             """
             )
         with col_res2:
@@ -294,14 +299,14 @@ with tab_engorda:
         st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
 
 # ==========================================
-# PESTAÑA 2: FORMULACIÓN AVANZADA Y BALANCEADA
+# PESTAÑA 2: FORMULACIÓN AVANZADA Y PRECIOS DE INSUMOS
 # ==========================================
 with tab_formulacion:
     st.subheader(
-        "🧮 Formulación y Balanceo de Precisión al Mínimo Costo"
+        "🧮 Módulo de Costos e Insumos: Modificación de Precios y Formulación de Precisión"
     )
     st.markdown(
-        "Las proporciones de inclusión de cada ingrediente se formulan respetando estrictamente los límites fisiológicos de la especie para que la ración sume exactamente **100.00%** (**1,000.0 kg por tonelada**)."
+        "Ajuste libremente los **costos y precios de los insumos / materias primas ($/kg)** en la tabla interactiva. Seleccione o deseleccione los ingredientes disponibles para balancear la ración al mínimo costo."
     )
 
     col_f1, col_f2 = st.columns(2)
@@ -317,7 +322,7 @@ with tab_formulacion:
             key="etap_form_multi",
         )
 
-    # Requerimientos nutricionales mínimos y límites máximos por etapa
+    # Requerimientos nutricionales
     if "Iniciación" in etapa_form:
         min_ne, min_sid_lys, min_pc, max_fibra = 2350.0, 0.95, 19.5, 5.0
     elif "Desarrollo" in etapa_form:
@@ -327,7 +332,7 @@ with tab_formulacion:
     else:
         min_ne, min_sid_lys, min_pc, max_fibra = 2180.0, 0.60, 15.0, 8.5
 
-    # Base maestra con rangos de inclusión estándar reales para porcicultura
+    # Master DB de Insumos con Precios Editables
     datos_maestros = [
         {"Ingrediente": "Maíz Grano", "Disponible": True, "Costo ($/kg)": 5.50, "NE (kcal/kg)": 2650.0, "SID Lys (%)": 0.26, "PC (%)": 8.5, "Fibra (%)": 2.0, "bound": (20.0, 80.0), "base": 58.0},
         {"Ingrediente": "Sorgo Grano", "Disponible": True, "Costo ($/kg)": 5.20, "NE (kcal/kg)": 2580.0, "SID Lys (%)": 0.22, "PC (%)": 10.0, "Fibra (%)": 2.2, "bound": (0.0, 60.0), "base": 0.0},
@@ -342,7 +347,9 @@ with tab_formulacion:
 
     df_inventario = pd.DataFrame(datos_maestros)
 
-    st.markdown("### 📦 Inventario y Disponibilidad en Almacén")
+    st.markdown("### 💵 Catálogo de Insumos y Costos de Compra ($/kg)")
+    st.info("💡 **Instrucciones:** Modifique los valores en la columna **'Costo ($/kg)'** según sus cotizaciones actuales y active/desactive materias primas.")
+
     df_editado = st.data_editor(
         df_inventario[["Ingrediente", "Disponible", "Costo ($/kg)", "NE (kcal/kg)", "SID Lys (%)", "PC (%)", "Fibra (%)"]],
         column_config={
@@ -354,8 +361,9 @@ with tab_formulacion:
             ),
             "Costo ($/kg)": st.column_config.NumberColumn(
                 "Costo ($/kg)",
-                min_value=0.5,
-                max_value=100.0,
+                min_value=0.10,
+                max_value=200.0,
+                step=0.10,
                 format="$%.2f",
             ),
         },
@@ -412,9 +420,8 @@ with tab_formulacion:
         if res.success:
             props = res.x
             costo_kg = res.fun / 100.0
-            st.success("✅ ¡Dieta optimizada al mínimo costo con la selección actual!")
+            st.success("✅ ¡Dieta optimizada al mínimo costo con los precios actuales!")
         else:
-            # Respaldo con perfil prático nutricional realista (evita reparto plano de 12.5%)
             raw_props = [dict_bases[ing] for ing in ingredientes_activos]
             if sum(raw_props) == 0:
                 raw_props = [100.0 / len(ingredientes_activos)] * len(ingredientes_activos)
@@ -426,7 +433,6 @@ with tab_formulacion:
         inclusions = [round(p, 2) for p in props]
         diff_inc = round(100.0 - sum(inclusions), 2)
         if inclusions:
-            # Se ajusta la diferencia decimal en el cereal base (primer ingrediente activo)
             inclusions[0] = round(inclusions[0] + diff_inc, 2)
 
         kgs = [round(inc * 10.0, 1) for inc in inclusions]
@@ -439,16 +445,16 @@ with tab_formulacion:
                 "Materia Prima / Ingrediente": ingredientes_activos,
                 "Inclusión (%)": inclusions,
                 "Kg por Tonelada": kgs,
+                "Costo Insumo ($/kg)": [f"${cost:.2f}" for cost in c],
+                "Aporte ($/Ton)": [f"${round((inc/100.0)*cost*1000, 2):,.2f}" for inc, cost in zip(inclusions, c)],
             }
         )
         df_form_filt = df_formula[df_formula["Inclusión (%)"] > 0.01]
         
         st.table(df_form_filt)
         
-        # Validación explícita de la suma exacta
         st.success(f"⚖️ **Total Ración Balanceada:** `{df_form_filt['Inclusión (%)'].sum():.2f}%` = `{df_form_filt['Kg por Tonelada'].sum():.1f} kg / Tonelada`")
 
-        # Verificación nutricional real calculada
         aportes_ne = sum((inc/100.0) * next(d["NE (kcal/kg)"] for d in datos_maestros if d["Ingrediente"] == ing) for inc, ing in zip(inclusions, ingredientes_activos))
         aportes_lys = sum((inc/100.0) * next(d["SID Lys (%)"] for d in datos_maestros if d["Ingrediente"] == ing) for inc, ing in zip(inclusions, ingredientes_activos))
         aportes_pc = sum((inc/100.0) * next(d["PC (%)"] for d in datos_maestros if d["Ingrediente"] == ing) for inc, ing in zip(inclusions, ingredientes_activos))
@@ -471,7 +477,7 @@ with tab_formulacion:
 # ==========================================
 with tab_lactancia:
     st.subheader(
-        "🍼 Módulo de Nutrición, Cría y Soporte Metabólico en Cerdas Lactantes"
+        "BN Módulo de Nutrición, Cría y Soporte Metabólico en Cerdas Lactantes"
     )
 
     col_l1, col_l2 = st.columns(2)
@@ -652,7 +658,7 @@ def generar_pdf_reporte(
     pdf.cell(
         0,
         5,
-        "Documento generado automaticamente por Porcidex v6.8.",
+        "Documento generado automaticamente por Porcidex v6.9.",
         align="C",
     )
 
@@ -770,5 +776,5 @@ with tab_resumen:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v6.8 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v6.9 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
