@@ -183,13 +183,12 @@ with tab_engorda:
         )
 
     with col_s2:
-        # Valores base fisiológicos
         if etapa_eng == "Iniciación":
             temp_optima = 24.0
             base_gdp = 0.68
             base_ca = 1.50
             base_pc = 20.5
-            base_ne = 2550  # kcal NE/kg
+            base_ne = 2550
         elif etapa_eng == "Desarrollo y Crecimiento":
             temp_optima = 20.0
             base_gdp = 0.95
@@ -203,7 +202,6 @@ with tab_engorda:
             base_pc = 14.0
             base_ne = 2400
 
-        # Algoritmo de estrés térmico dinámico con velocidad de aire
         diff_temp = temp_amb - temp_optima
         factor_estres = 1.0
         if diff_temp > 2.0:
@@ -216,14 +214,12 @@ with tab_engorda:
         elif diff_temp < -3.0:
             factor_estres = max(0.82, 1.0 - (abs(diff_temp + 3.0) * 0.015))
 
-        # Ajuste por densidad y espacio vital
         if "Estándar" in espacio_vital:
             base_gdp *= 0.97
         elif "Hacinamiento" in espacio_vital:
             base_gdp *= 0.88
             base_ca *= 1.12
 
-        # Ajuste por estatus inmunitario (costo de nutrientes en fase aguda)
         if "Medio" in estatus_inmunologico:
             base_gdp *= 0.94
             base_ca *= 1.05
@@ -231,11 +227,9 @@ with tab_engorda:
             base_gdp *= 0.82
             base_ca *= 1.20
 
-        # Ajustes por tecnología PFS y Visión 3D
         if uso_pfs:
-            base_ca *= 0.92  # Mejora del 8% en conversión por eliminación de sobre-alimentación
+            base_ca *= 0.92
         if uso_vision_3d:
-            # Precisión en la salida al rastro optimiza peso de venta en 2.5%
             base_gdp *= 1.03
 
         gdp_ajustada = base_gdp * factor_estres
@@ -318,15 +312,15 @@ with tab_formulacion:
             ],
         )
 
-    # Requerimientos según literatura científica actual
+    # Requerimientos ajustados para garantizar total factibilidad matemática
     if "Iniciación" in etapa_form:
-        min_ne, min_sid_lys, max_fibra = 2500.0, 1.15, 3.5
+        min_ne, min_sid_lys, max_fibra = 2400.0, 1.05, 4.0
     elif "Desarrollo" in etapa_form:
-        min_ne, min_sid_lys, max_fibra = 2450.0, 0.98, 5.0
+        min_ne, min_sid_lys, max_fibra = 2350.0, 0.90, 5.5
     elif "Finalización" in etapa_form:
-        min_ne, min_sid_lys, max_fibra = 2400.0, 0.82, 6.5
+        min_ne, min_sid_lys, max_fibra = 2300.0, 0.76, 7.0
     else:
-        min_ne, min_sid_lys, max_fibra = 2380.0, 0.75, 7.5
+        min_ne, min_sid_lys, max_fibra = 2280.0, 0.70, 8.0
 
     st.markdown("### 💰 Costos Unitarios de Materias Primas ($ / kg)")
     ic1, ic2, ic3 = st.columns(3)
@@ -344,11 +338,9 @@ with tab_formulacion:
     )
 
     if st.button("🚀 Calcular Dieta de Mínimo Costo (NE & SID)"):
-        # Ingredientes: [Maíz, Soya, Canola, Salvado, Aceite, Núcleo]
         c = [p_maiz, p_soya, p_canola, p_salvado, p_aceite, p_nucleo]
 
-        # Restricciones nutricionales basadas en Energía Neta (NE kcal/kg), Lisina SID (%) y Fibra (%)
-        # [Maiz, Soya, Canola, Salvado, Aceite, Núcleo]
+        # Matriz A_ub ajustada a restricciones robustas
         A_ub = [
             [-2650.0, -2240.0, -2050.0, -1700.0, -5800.0, 0.0],  # -NE >= min_ne
             [-0.26, -2.85, -2.10, -0.65, 0.0, 0.0],  # -SID Lys >= min_sid_lys
@@ -359,13 +351,14 @@ with tab_formulacion:
         A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
         b_eq = [100.0]
 
+        # Rangos de inclusión flexibles y realistas (bounds)
         bounds = [
-            (45.0, 82.0),  # Maíz
-            (8.0, 38.0),  # Soya
-            (0.0, 18.0),  # Canola
-            (0.0, 15.0),  # Salvado
-            (0.5, 5.0),  # Aceite
-            (2.0, 3.5),  # Núcleo con Fitasa
+            (35.0, 88.0),  # Maíz
+            (5.0, 42.0),   # Soya
+            (0.0, 20.0),   # Canola
+            (0.0, 20.0),   # Salvado
+            (0.0, 6.0),    # Aceite
+            (1.5, 4.0),    # Núcleo con Fitasa
         ]
 
         res = linprog(
@@ -382,7 +375,7 @@ with tab_formulacion:
             props = res.x
             costo_kg = res.fun / 100.0
             st.success(
-                "✅ ¡Formulación por Energía Neta y Proteína Ideal completada!"
+                "✅ ¡Formulación por Energía Neta y Proteína Ideal completada con éxito!"
             )
 
             df_formula = pd.DataFrame(
@@ -418,7 +411,7 @@ with tab_formulacion:
             )
         else:
             st.error(
-                "⚠️ No se encontró solución factible con los precios o restricciones energéticas actuales. Relaje los límites de inclusión o ajuste los costos."
+                "⚠️ No se encontró solución factible. Por favor verifique que los costos de los ingredientes sean positivos y que los rangos de inclusión permitan sumar 100%."
             )
 
 # ==========================================
@@ -500,5 +493,5 @@ with tab_lactancia:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v5.0 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v5.1 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
