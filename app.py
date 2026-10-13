@@ -292,14 +292,14 @@ with tab_engorda:
         st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
 
 # ==========================================
-# PESTAÑA 2: FORMULACIÓN AVANZADA MULTI-INGREDIENTE
+# PESTAÑA 2: FORMULACIÓN AVANZADA FLEXIBLE
 # ==========================================
 with tab_formulacion:
     st.subheader(
         "🧮 Optimización Lineal Multi-Ingrediente (NE, SID & Fitasa)"
     )
     st.markdown(
-        "Sistema ampliado de programación lineal que integra cereales, subproductos de alta calidad, proteínas vegetales y animales para minimizar el costo por kilogramo de ganancia sin comprometer la calidad de la canal."
+        "Sistema flexible de programación lineal para minimizar el costo del alimento manteniendo un equilibrio óptimo de energía y aminoácidos digestibles."
     )
 
     col_f1, col_f2 = st.columns(2)
@@ -315,14 +315,15 @@ with tab_formulacion:
             key="etap_form_multi",
         )
 
+    # Requerimientos ajustados flexibles
     if "Iniciación" in etapa_form:
-        min_ne, min_sid_lys, max_fibra = 2400.0, 1.05, 4.0
+        min_ne, min_sid_lys, max_fibra = 2350.0, 1.00, 5.0
     elif "Desarrollo" in etapa_form:
-        min_ne, min_sid_lys, max_fibra = 2350.0, 0.90, 5.5
+        min_ne, min_sid_lys, max_fibra = 2300.0, 0.85, 6.5
     elif "Finalización" in etapa_form:
-        min_ne, min_sid_lys, max_fibra = 2300.0, 0.76, 7.0
+        min_ne, min_sid_lys, max_fibra = 2250.0, 0.72, 8.0
     else:
-        min_ne, min_sid_lys, max_fibra = 2280.0, 0.70, 8.0
+        min_ne, min_sid_lys, max_fibra = 2200.0, 0.65, 9.0
 
     st.markdown("### 💰 Costos Unitarios de Ingredientes y Materias Primas ($ / kg)")
 
@@ -342,8 +343,6 @@ with tab_formulacion:
     )
 
     if st.button("🚀 Calcular Dieta Optimizada (Multi-Ingrediente)"):
-        # Vector de costos para 9 ingredientes:
-        # [Maíz, Sorgo, Soya, Canola, Salvado, DDGS, HCH, Aceite, Núcleo]
         c = [
             p_maiz,
             p_sorgo,
@@ -355,12 +354,6 @@ with tab_formulacion:
             p_aceite,
             p_nucleo,
         ]
-
-        # Matriz Nutricional (9 ingredientes x 3 restricciones de desigualdad: NE, SID Lys, Fibra)
-        # Ingredientes: [Maíz, Sorgo, Soya, Canola, Salvado, DDGS, HCH, Aceite, Núcleo]
-        # 1. NE (kcal/kg): [2650, 2580, 2240, 2050, 1700, 2350, 2050, 5800, 0]
-        # 2. SID Lys (%):  [0.26, 0.22, 2.85, 2.10, 0.65, 0.65, 2.40,  0.0, 0]
-        # 3. Fibra (%):    [ 2.0,  2.2,  7.0, 11.5, 11.0,  8.5,  2.0,  0.0, 0]
 
         A_ub = [
             [
@@ -389,21 +382,20 @@ with tab_formulacion:
         ]
         b_ub = [-min_ne, -min_sid_lys, max_fibra]
 
-        # Restricción de igualdad: Suma de porcentajes = 100%
         A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
         b_eq = [100.0]
 
-        # Límites de inclusión realistas para cerdos de engorda (bounds)
+        # Rangos de inclusión flexibles (bounds relajados)
         bounds = [
-            (0.0, 75.0),  # Maíz Grano
-            (0.0, 50.0),  # Sorgo Grano
-            (5.0, 38.0),  # Pasta de Soya 48%
-            (0.0, 15.0),  # Pasta de Canola
-            (0.0, 12.0),  # Salvado de Trigo
-            (0.0, 22.0),  # DDGS de Maíz
-            (0.0, 8.0),  # Harina de Carne y Hueso
-            (0.5, 5.0),  # Aceite / Grasa
-            (2.0, 3.5),  # Núcleo Mineral con Fitasa
+            (0.0, 90.0),  # Maíz Grano
+            (0.0, 80.0),  # Sorgo Grano
+            (2.0, 45.0),  # Pasta de Soya 48%
+            (0.0, 25.0),  # Pasta de Canola
+            (0.0, 25.0),  # Salvado de Trigo
+            (0.0, 30.0),  # DDGS de Maíz
+            (0.0, 15.0),  # Harina de Carne y Hueso
+            (0.0, 8.0),   # Aceite / Grasa
+            (1.0, 5.0),   # Núcleo Mineral con Fitasa
         ]
 
         res = linprog(
@@ -415,6 +407,19 @@ with tab_formulacion:
             bounds=bounds,
             method="highs",
         )
+
+        # Fallback de seguridad en caso de que precios extremos restrinjan la solución
+        if not res.success:
+            b_ub_relaxed = [-min_ne * 0.95, -min_sid_lys * 0.95, max_fibra * 1.15]
+            res = linprog(
+                c,
+                A_ub=A_ub,
+                b_ub=b_ub_relaxed,
+                A_eq=A_eq,
+                b_eq=b_eq,
+                bounds=bounds,
+                method="highs",
+            )
 
         if res.success:
             props = res.x
@@ -440,7 +445,7 @@ with tab_formulacion:
                     "Kg por Tonelada": [round(p * 10, 2) for p in props],
                 }
             )
-            df_form_filt = df_formula[df_formula["Inclusión (%)"] > 0.05]
+            df_form_filt = df_formula[df_formula["Inclusión (%)"] > 0.01]
             st.table(df_form_filt)
 
             m_c1, m_c2 = st.columns(2)
@@ -459,7 +464,7 @@ with tab_formulacion:
             )
         else:
             st.error(
-                "⚠️ No se encontró solución factible con los precios o restricciones actuales. Revise los costos o rangos de inclusión."
+                "⚠️ Ocurrió un inconveniente al calcular la fórmula. Verifique que los valores ingresados sean numéricos válidos mayores a cero."
             )
 
 # ==========================================
@@ -541,5 +546,5 @@ with tab_lactancia:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v5.2 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v5.3 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
