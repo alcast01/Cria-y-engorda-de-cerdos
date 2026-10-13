@@ -131,9 +131,6 @@ st.markdown(
 # PANEL IZQUIERDO: VARIABLES PLF Y AMBIENTALES
 # ==========================================
 st.sidebar.header("🔬 Panel PLF & Variables Biológicas")
-st.sidebar.markdown(
-    "*Basado en directrices de Animal Science, Journal of Animal Science y Ganadería de Precisión.*"
-)
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🌡️ Ambiente y Estrés Térmico (THI Dinámico)")
@@ -307,7 +304,6 @@ with tab_engorda:
         consumo_total_lote = consumo_total_cerdo * num_animales
 
         # DETERMINACIÓN DE SEMÁFOROS ZOOTÉCNICOS
-        # Semáforo GDP
         if gdp_ajustada >= 0.85:
             badge_gdp = '<span class="status-badge-green">🟢 ÓPTIMO: Crecimiento Rápido</span>'
         elif gdp_ajustada >= 0.60:
@@ -315,7 +311,6 @@ with tab_engorda:
         else:
             badge_gdp = '<span class="status-badge-red">🔴 PELIGRO: Crecimiento Deficiente</span>'
 
-        # Semáforo Conversión Alimenticia (CA)
         if ca_ajustada <= 2.20:
             badge_ca = '<span class="status-badge-green">🟢 ÓPTIMO: Alta Eficiencia</span>'
         elif ca_ajustada <= 2.80:
@@ -323,7 +318,6 @@ with tab_engorda:
         else:
             badge_ca = '<span class="status-badge-red">🔴 PELIGRO: Ineficiencia / Desperdicio</span>'
 
-        # Semáforo Alojamiento
         if "Óptimo" in espacio_vital:
             badge_esp = '<span class="status-badge-green">🟢 ÓPTIMO: Bienestar Espacial</span>'
         elif "Estándar" in espacio_vital:
@@ -331,7 +325,6 @@ with tab_engorda:
         else:
             badge_esp = '<span class="status-badge-red">🔴 PELIGRO: Hacinamiento Severo</span>'
 
-        # Semáforo Sanitario
         if "Alto" in estatus_inmunologico:
             badge_san = '<span class="status-badge-green">🟢 ÓPTIMO: Alta Bioseguridad</span>'
         elif "Medio" in estatus_inmunologico:
