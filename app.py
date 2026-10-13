@@ -196,7 +196,7 @@ monitoreo_acustico = st.sidebar.checkbox(
 # --- NAVEGACIÓN PRINCIPAL POR PESTAÑAS ---
 tab_engorda, tab_formulacion, tab_lactancia, tab_resumen = st.tabs(
     [
-        "📈 Engorda, PLF y Control de GDP",
+        "📈 Engorda, PLF y Rentabilidad Financiera",
         "🧮 Formulación y Precios de Insumos",
         "🍼 Cerdas en Lactancia y Cría",
         "📋 Resumen Técnico y Comercial",
@@ -204,13 +204,13 @@ tab_engorda, tab_formulacion, tab_lactancia, tab_resumen = st.tabs(
 )
 
 # ==========================================
-# PESTAÑA 1: ENGORDA, PLF Y BARRA DE GDP CON SEMÁFOROS
+# PESTAÑA 1: ENGORDA, PLF, BARRA DE GDP Y EVALUACIÓN FINANCIERA
 # ==========================================
 with tab_engorda:
     st.subheader(
-        "Módulo de Simulación Dinámica, Ganadería de Precisión (PLF) e Indicadores Zootécnicos"
+        "Módulo de Simulación Dinámica, Ganadería de Precisión (PLF) y Evaluación de Rentabilidad Financiera"
     )
-    st.markdown("💡 *Guía visual para el productor: Los indicadores de color denotan el estado actual de la producción para tomar decisiones informadas.*")
+    st.markdown("💡 *Guía visual para el productor: Los indicadores de color denotan el estado actual de la producción y la viabilidad económica del proyecto.*")
 
     col_s1, col_s2 = st.columns([1, 2])
 
@@ -240,8 +240,7 @@ with tab_engorda:
         )
 
         st.markdown("---")
-        st.markdown("### ⚡ Ajuste Manual de Ganancia Diaria de Peso (GDP)")
-        
+        st.markdown("### ⚡ Ajuste Manual de GDP")
         base_gdp_def = 0.68 if etapa_eng == "Iniciación" else (0.95 if etapa_eng == "Desarrollo y Crecimiento" else 1.10)
         
         gdp_manual = st.slider(
@@ -252,6 +251,14 @@ with tab_engorda:
             step=0.01,
             help="Deslice la barra para ajustar la velocidad de crecimiento esperada y estimar la duración total de la engorda.",
         )
+
+        st.markdown("---")
+        st.markdown("### 💵 Parámetros Financieros y de Mercado")
+        precio_venta_kg = st.number_input("Precio de Venta del Cerdo en Pie ($/kg vivo)", 20.0, 100.0, 48.0, step=0.5)
+        costo_lechon_compra = st.number_input("Costo de Compra del Lechón/Cerdo ($/cabeza)", 0.0, 3000.0, 850.0, step=25.0)
+        costo_sanidad_cerdo = st.number_input("Gastos de Sanidad y Vacunas ($/cerdo)", 0.0, 500.0, 65.0, step=5.0)
+        costo_flete_cerdo = st.number_input("Flete y Logística Comercial ($/cerdo)", 0.0, 300.0, 40.0, step=5.0)
+        costo_operativo_fijo = st.number_input("Mano de Obra y Servicios ($/cerdo)", 0.0, 1000.0, 120.0, step=10.0)
 
     with col_s2:
         if etapa_eng == "Iniciación":
@@ -302,6 +309,26 @@ with tab_engorda:
         consumo_total_cerdo = consumo_diario * dias_estudio
         consumo_total_lote = consumo_total_cerdo * num_animales
 
+        # Costo promedio base de alimento ($6.80 MXN/kg como referencia dinámica)
+        costo_alimento_kg = 6.80
+        costo_alimento_cerdo = consumo_total_cerdo * costo_alimento_kg
+        costo_total_cerdo = (
+            costo_alimento_cerdo
+            + costo_lechon_compra
+            + costo_sanidad_cerdo
+            + costo_flete_cerdo
+            + costo_operativo_fijo
+        )
+        ingreso_bruto_cerdo = peso_objetivo * precio_venta_kg
+        margen_neto_cerdo = ingreso_bruto_cerdo - costo_total_cerdo
+        
+        costo_total_lote = costo_total_cerdo * num_animales
+        ingreso_bruto_lote = ingreso_bruto_cerdo * num_animales
+        utilidad_neta_lote = margen_neto_cerdo * num_animales
+        roi_porcentaje = (utilidad_neta_lote / max(1.0, costo_total_lote)) * 100.0
+        punto_equilibrio_kg = costo_total_cerdo / max(1.0, peso_objetivo)
+
+        # SEMÁFOROS ZOOTÉCNICOS Y FINANCIEROS
         if gdp_ajustada >= 0.85:
             badge_gdp = '<span class="status-badge-green">🟢 ÓPTIMO: Crecimiento Rápido</span>'
         elif gdp_ajustada >= 0.60:
@@ -316,21 +343,14 @@ with tab_engorda:
         else:
             badge_ca = '<span class="status-badge-red">🔴 PELIGRO: Ineficiencia / Desperdicio</span>'
 
-        if "Óptimo" in espacio_vital:
-            badge_esp = '<span class="status-badge-green">🟢 ÓPTIMO: Bienestar Espacial</span>'
-        elif "Estándar" in espacio_vital:
-            badge_esp = '<span class="status-badge-orange">🟠 AJUSTAR: Espacio Límite</span>'
+        if margen_neto_cerdo > 300.0:
+            badge_rent = '<span class="status-badge-green">🟢 EXCELENTE: Altamente Rentable</span>'
+        elif margen_neto_cerdo >= 0.0:
+            badge_rent = '<span class="status-badge-orange">🟠 PUNTO CRÍTICO: Margen Estrecho</span>'
         else:
-            badge_esp = '<span class="status-badge-red">🔴 PELIGRO: Hacinamiento Severo</span>'
+            badge_rent = '<span class="status-badge-red">🔴 PÉRDIDA: Negocio No Rentable</span>'
 
-        if "Alto" in estatus_inmunologico:
-            badge_san = '<span class="status-badge-green">🟢 ÓPTIMO: Alta Bioseguridad</span>'
-        elif "Medio" in estatus_inmunologico:
-            badge_san = '<span class="status-badge-orange">🟠 AJUSTAR: Reto Sanitario Controlado</span>'
-        else:
-            badge_san = '<span class="status-badge-red">🔴 PELIGRO: Brote / Reto Severo</span>'
-
-        st.markdown(f"### 📋 Evaluador de Condición Zootécnica: **{etapa_eng}**")
+        st.markdown(f"### 📋 Evaluador de Condición Zootécnica y Financiera: **{etapa_eng}**")
         
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("GDP Operativa", f"{gdp_ajustada:.2f} kg/d")
@@ -338,34 +358,44 @@ with tab_engorda:
         m3.metric("Duración Engorda", f"{dias_estudio} días")
         m4.metric("Consumo Diario", f"{consumo_diario:.2f} kg")
 
-        st.markdown("#### 🚦 Semáforo de Producción y Puntos Críticos de Control:")
+        st.markdown("#### 🚦 Semáforo de Producción y Rentabilidad Económica:")
         col_sem1, col_sem2 = st.columns(2)
         with col_sem1:
             st.markdown(f"* **Ganancia Diaria (GDP):** {badge_gdp}", unsafe_allow_html=True)
             st.markdown(f"* **Conversión Alimenticia:** {badge_ca}", unsafe_allow_html=True)
         with col_sem2:
-            st.markdown(f"* **Superficie Vital:** {badge_esp}", unsafe_allow_html=True)
-            st.markdown(f"* **Estatus Sanitario:** {badge_san}", unsafe_allow_html=True)
+            st.markdown(f"* **Estatus de Rentabilidad:** {badge_rent}", unsafe_allow_html=True)
+            st.markdown(f"* **Punto de Equilibrio:** `${punto_equilibrio_kg:.2f} MXN/kg vivo`", unsafe_allow_html=True)
+
+        st.markdown("---")
+        st.markdown("### 💰 Análisis Financiero y Margen Económico del Lote")
+        f1, f2, f3, f4 = st.columns(4)
+        f1.metric("Costo Total / Cerdo", f"${costo_total_cerdo:,.2f} MXN")
+        f2.metric("Ingreso Bruto / Cerdo", f"${ingreso_bruto_cerdo:,.2f} MXN")
+        f3.metric("Margen Neto / Cerdo", f"${margen_neto_cerdo:,.2f} MXN", delta=f"ROI: {roi_porcentaje:.1f}%")
+        f4.metric("Utilidad Neta del Lote", f"${utilidad_neta_lote:,.2f} MXN")
 
         st.markdown("---")
         col_res1, col_res2 = st.columns(2)
         with col_res1:
             st.info(
                 f"""
-            **Resumen Logístico del Lote:**
-            * **Días Estimados a Mercado:** `{dias_estudio} días` ({round(dias_estudio/30, 1)} meses).
-            * **Consumo Total de Alimento por Cerdo:** `{consumo_total_cerdo:.1f} kg`.
-            * **Requerimiento Total del Lote ({num_animales:,} cerdos):** `{consumo_total_lote:,.1f} kg` (`{round(consumo_total_lote/40):,} sacos de 40 kg`).
+            **Desglose Estructurado de Costos por Cerdo:**
+            * **Alimento (65-75% del costo):** `${costo_alimento_cerdo:,.2f} MXN` (`{consumo_total_cerdo:.1f} kg`)
+            * **Adquisición del Cerdo/Lechón:** `${costo_lechon_compra:,.2f} MXN`
+            * **Sanidad y Tratamientos:** `${costo_sanidad_cerdo:,.2f} MXN`
+            * **Flete y Comercialización:** `${costo_flete_cerdo:,.2f} MXN`
+            * **Mano de Obra y Servicios:** `${costo_operativo_fijo:,.2f} MXN`
             """
             )
         with col_res2:
-            if thi_calculado > 76:
-                st.warning(
-                    f"⚠️ **Alerta Biológica Crítica (THI {thi_calculado:.1f}):** Se detecta depresión de consumo voluntario. Se requiere suplementación con Betaina (1.5 kg/ton) y electrolitos."
+            if margen_neto_cerdo < 0:
+                st.error(
+                    f"🔴 **Alerta Financiera:** El precio de venta (${precio_venta_kg:.2f}/kg) está por debajo del punto de equilibrio (${punto_equilibrio_kg:.2f}/kg). Se recomienda optimizar la conversión alimenticia o negociar insumos."
                 )
             else:
                 st.success(
-                    f"✅ **Estatus Fisiológico Estable (THI {thi_calculado:.1f}):** Condiciones idóneas para expresión del potencial genético."
+                    f"🟢 **Proyecto Financieramente Viable:** El proyecto genera `${utilidad_neta_lote:,.2f} MXN` de utilidad neta para el lote con un ROI del `{roi_porcentaje:.1f}%`."
                 )
 
         st.markdown("### 📈 Curva Biológica de Crecimiento Estocástico")
@@ -618,7 +648,6 @@ with tab_lactancia:
     st.markdown("### 🌾 Formulación de Dieta Específica para Cerdas en Lactancia")
     st.markdown("Modifique los precios y disponibilidad de las materias primas e ingredientes funcionales para balancear automáticamente la ración de lactancia al mínimo costo.")
 
-    # Requerimientos específicos de lactancia
     min_ne_lac, min_lys_lac, min_pc_lac, max_fibra_lac = 2450.0, 1.00, 18.5, 6.0
 
     ingredientes_lactancia_db = [
@@ -759,6 +788,12 @@ def generar_pdf_reporte(
     espacio_vital,
     estatus_inmunologico,
     df_form_filt,
+    costo_total_cerdo,
+    ingreso_bruto_cerdo,
+    margen_neto_cerdo,
+    utilidad_neta_lote,
+    roi_porcentaje,
+    punto_equilibrio_kg,
 ):
     pdf = FPDF()
     pdf.add_page()
@@ -777,16 +812,13 @@ def generar_pdf_reporte(
     pdf.line(10, pdf.get_y(), 200, pdf.get_y())
     pdf.ln(6)
 
-    # 1. RESUMEN EJECUTIVO
+    # 1. RESUMEN EJECUTIVO Y FINANCIERO
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(31, 78, 120)
-    pdf.cell(0, 7, "1. RESUMEN EJECUTIVO (PRODUCTOR / PORCICULTOR)", ln=True)
+    pdf.cell(0, 7, "1. RESUMEN EJECUTIVO Y EVALUACION DE RENTABILIDAD", ln=True)
 
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(0, 0, 0)
-
-    costo_cerdo = consumo_total_cerdo * costo_kg
-    costo_lote = consumo_total_lote * costo_kg
 
     prod_text = [
         f"Etapa Productiva: {etapa_eng}",
@@ -796,10 +828,12 @@ def generar_pdf_reporte(
         f"Duracion Estimada de Engorda: {dias_estudio} dias",
         f"Ganancia Diaria Promedio (GDP Operativa): {gdp_ajustada:.2f} kg/dia",
         f"Conversion Alimenticia (CA): {ca_ajustada:.2f} kg alimento / kg peso",
-        f"Consumo Alimento por Cerdo: {consumo_total_cerdo:.1f} kg",
         f"Consumo Total Lote: {consumo_total_lote:,.1f} kg ({round(consumo_total_lote/40):,} sacos de 40kg)",
-        f"Costo Alimento Estimado por Cerdo: ${costo_cerdo:,.2f} MXN",
-        f"Costo Alimento Total del Lote: ${costo_lote:,.2f} MXN",
+        f"Costo Total de Produccion / Cerdo: ${costo_total_cerdo:,.2f} MXN",
+        f"Ingreso Bruto de Venta / Cerdo: ${ingreso_bruto_cerdo:,.2f} MXN",
+        f"Margen Neto por Cerdo: ${margen_neto_cerdo:,.2f} MXN",
+        f"Utilidad Neta Total del Lote: ${utilidad_neta_lote:,.2f} MXN (ROI: {roi_porcentaje:.1f}%)",
+        f"Punto de Equilibrio Requerido: ${punto_equilibrio_kg:.2f} MXN / kg vivo",
     ]
 
     for item in prod_text:
@@ -876,14 +910,12 @@ def generar_pdf_reporte(
 # ==========================================
 with tab_resumen:
     st.subheader(
-        "📋 Hoja de Balance Integral: Parámetros para el Productor y Nutriólogo"
+        "📋 Hoja de Balance Integral: Parámetros para el Productor, Financiero y Nutriólogo"
     )
     st.markdown(
-        "Reporte unificado que consolida los indicadores zootécnicos clave, económicos y la especificación nutrimental de la dieta formulada."
+        "Reporte unificado que consolida los indicadores zootécnicos clave, el análisis económico de rentabilidad y la especificación nutrimental de la dieta formulada."
     )
 
-    costo_alimento_por_cerdo = consumo_total_cerdo * costo_kg
-    costo_alimento_lote_total = consumo_total_lote * costo_kg
     ganancia_peso_total = peso_objetivo - peso_inicial
 
     col_prod, col_nutri = st.columns(2)
@@ -892,7 +924,7 @@ with tab_resumen:
         st.markdown(
             """
         <div class="report-card">
-            <h3 style="color: #1f4e78; margin-top:0;">📊 Resumen Ejecutivo para el Productor Porcino</h3>
+            <h3 style="color: #1f4e78; margin-top:0;">📊 Resumen Ejecutivo y Financiero (Productor)</h3>
         </div>
         """,
             unsafe_allow_html=True,
@@ -911,8 +943,12 @@ with tab_resumen:
         * **Conversión Alimenticia (CA):** `{ca_ajustada:.2f}` *(kg alimento / kg peso)*
         * **Consumo Total Alimento por Cerdo:** `{consumo_total_cerdo:.1f} kg`
         * **Consumo Total de Alimento por Lote:** `{consumo_total_lote:,.1f} kg` (`{round(consumo_total_lote/40):,} sacos de 40 kg`)
-        * **Costo Estimado Alimento por Cerdo:** `${costo_alimento_por_cerdo:,.2f} MXN`
-        * **Costo Total Alimento por Lote:** `${costo_alimento_lote_total:,.2f} MXN`
+        * **Costo Total de Producción por Cerdo:** `${costo_total_cerdo:,.2f} MXN`
+        * **Ingreso Bruto de Venta por Cerdo:** `${ingreso_bruto_cerdo:,.2f} MXN`
+        * **Margen Neto por Cerdo:** `${margen_neto_cerdo:,.2f} MXN`
+        * **Utilidad Neta Total del Lote:** `${utilidad_neta_lote:,.2f} MXN`
+        * **Retorno sobre la Inversión (ROI):** `{roi_porcentaje:.1f} %`
+        * **Punto de Equilibrio (Mínimo de venta):** `${punto_equilibrio_kg:.2f} MXN / kg vivo`
         """
         )
 
@@ -970,6 +1006,12 @@ with tab_resumen:
         espacio_vital,
         estatus_inmunologico,
         df_form_filt,
+        costo_total_cerdo,
+        ingreso_bruto_cerdo,
+        margen_neto_cerdo,
+        utilidad_neta_lote,
+        roi_porcentaje,
+        punto_equilibrio_kg,
     )
 
     st.download_button(
