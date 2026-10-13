@@ -5,7 +5,7 @@ import streamlit as st
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
-    page_title="PorcinoMetrics | Nutrición y Producción Porcina",
+    page_title="Porcidex | Nutrición y Producción Porcina",
     page_icon="🐖",
     layout="wide",
 )
@@ -39,7 +39,7 @@ with col_logo:
     st.markdown("<h1>🐖📊</h1>", unsafe_allow_html=True)
 with col_title:
     st.markdown(
-        '<p class="main-header">PorcinoMetrics: Sistema Integral Porcino</p>',
+        '<p class="main-header">Porcidex: Sistema Integral Porcino</p>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -134,7 +134,6 @@ with tab_engorda:
         )
 
     with col_s2:
-        # Modelo de cálculo zootécnico
         if etapa == "Iniciación":
             temp_optima = 24.0
             base_gdp = 0.65
@@ -237,50 +236,86 @@ with tab_formulacion:
         "🧮 Optimización Lineal de Dietas (Least-Cost Feed Formulation)"
     )
     st.markdown(
-        "Este modelo utiliza programación lineal para resolver la mezcla óptima de ingredientes al menor costo posible, satisfaciendo los requerimientos mínimos y máximos nutricionales para la etapa seleccionada."
+        "Sistema de programación lineal multivariable para calcular la racha óptima combinando múltiples materias primas al mínimo costo por kilogramo."
     )
 
-    # Corregido: se usa st.columns(2) para que coincida con el desempaquetado
     col_f1, col_f2 = st.columns(2)
 
     with col_f1:
         req_etapa = st.selectbox(
-            "Seleccionar Etapa para Formulación",
-            ["Iniciación", "Desarrollo", "Finalización"],
+            "Seleccionar Etapa / Categoría para Formulación",
+            [
+                "Iniciación",
+                "Desarrollo",
+                "Finalización",
+                "Cerdas de Recría (Desarrollo/Remonta)",
+            ],
         )
 
+    # Requerimientos nutricionales mínimos y máximos según etapa
     if req_etapa == "Iniciación":
         min_pc, min_em, max_fibra = 21.0, 3250.0, 3.5
     elif req_etapa == "Desarrollo":
         min_pc, min_em, max_fibra = 17.5, 3150.0, 5.0
-    else:
+    elif req_etapa == "Finalización":
         min_pc, min_em, max_fibra = 14.5, 3050.0, 6.0
+    else:  # Cerdas de Recría
+        min_pc, min_em, max_fibra = 16.0, 3100.0, 7.5
 
     st.markdown("### 💰 Ingrese Costos Unitarios de Ingredientes ($ / kg)")
-    c_col1, c_col2, c_col3, c_col4 = st.columns(4)
-    precio_maiz = c_col1.number_input("Maíz Grano ($/kg)", 2.0, 15.0, 5.50)
-    precio_soya = c_col2.number_input(
-        "Pasta de Soya 48% ($/kg)", 5.0, 25.0, 12.00
-    )
-    precio_salvado = c_col3.number_input("Salvado de Trigo ($/kg)", 1.5, 10.0, 4.00)
-    precio_aceite = c_col4.number_input(
+
+    c1, c2, c3 = st.columns(3)
+    precio_maiz = c1.number_input("Maíz Grano ($/kg)", 2.0, 15.0, 5.50)
+    precio_soya = c2.number_input("Pasta de Soya 48% ($/kg)", 5.0, 25.0, 12.00)
+    precio_canola = c3.number_input("Pasta de Canola ($/kg)", 4.0, 20.0, 8.50)
+
+    c4, c5, c6 = st.columns(3)
+    precio_salvado = c4.number_input("Salvado de Trigo ($/kg)", 1.5, 10.0, 4.00)
+    precio_aceite = c5.number_input(
         "Aceite Vegetal / Grasa ($/kg)", 10.0, 40.0, 22.00
     )
+    precio_mineral = c6.number_input(
+        "Núcleo Mineral / Vitamínico ($/kg)", 10.0, 80.0, 35.00
+    )
 
-    if st.button("🚀 Optimizar Dieta al Mínimo Costo"):
-        c = [precio_maiz, precio_soya, precio_salvado, precio_aceite]
+    if st.button("🚀 Optimizar Dieta con Múltiples Ingredientes"):
+        # Vector de costos [Maíz, Soya, Canola, Salvado, Aceite, Mineral]
+        c = [
+            precio_maiz,
+            precio_soya,
+            precio_canola,
+            precio_salvado,
+            precio_aceite,
+            precio_mineral,
+        ]
+
+        # Matriz Nutricional de Ingredientes (Filas: PC, EM, Fibra)
+        # Orden: [Maíz, Soya, Canola, Salvado, Aceite, Mineral]
+        # PC (%):  [ 8.5, 48.0, 36.0, 15.0,  0.0,  0.0]
+        # EM (kcal):[3350, 3200, 2800, 2500, 8500,  0.0]
+        # Fibra (%):[ 2.0,  7.0, 11.5, 11.0,  0.0,  0.0]
 
         A_ub = [
-            [-9.0, -48.0, -15.0, 0.0],
-            [-3350.0, -3200.0, -2500.0, -8500.0],
-            [2.0, 7.0, 11.0, 0.0],
+            [-8.5, -48.0, -36.0, -15.0, 0.0, 0.0],  # -PC >= min_pc
+            [-3350.0, -3200.0, -2800.0, -2500.0, -8500.0, 0.0],  # -EM >= min_em
+            [2.0, 7.0, 11.5, 11.0, 0.0, 0.0],  # Fibra <= max_fibra
         ]
         b_ub = [-min_pc, -min_em, max_fibra]
 
-        A_eq = [[1.0, 1.0, 1.0, 1.0]]
+        # Restricción de igualdad: la sumatoria de proporciones debe ser 100%
+        A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
         b_eq = [100.0]
 
-        bounds = [(0, 85), (5, 45), (0, 25), (0, 6)]
+        # Límites lógicos de inclusión para cada ingrediente (%)
+        # [Maíz, Soya, Canola, Salvado, Aceite, Mineral]
+        bounds = [
+            (40.0, 85.0),  # Maíz
+            (5.0, 40.0),  # Pasta Soya
+            (0.0, 20.0),  # Pasta Canola
+            (0.0, 20.0),  # Salvado de Trigo
+            (0.0, 5.0),  # Aceite / Grasa
+            (1.5, 3.5),  # Núcleo Mineral (Fijo por requerimiento macro/micronutrientes)
+        ]
 
         res = linprog(
             c,
@@ -296,31 +331,38 @@ with tab_formulacion:
             proporciones = res.x
             costo_total_kg = res.fun / 100.0
 
-            st.success("✅ ¡Optimización calculada exitosamente!")
+            st.success("✅ ¡Dieta optimizada al mínimo costo con éxito!")
 
             res_df = pd.DataFrame(
                 {
-                    "Ingrediente": [
+                    "Materia Prima / Ingrediente": [
                         "Maíz Grano",
                         "Pasta de Soya 48%",
+                        "Pasta de Canola",
                         "Salvado de Trigo",
                         "Aceite Vegetal / Grasa",
+                        "Núcleo Mineral / Vitamínico",
                     ],
-                    "Inclusión (%)": [round(p, 2) for p in proporciones],
+                    "Inclusión en la Dieta (%)": [
+                        round(p, 2) for p in proporciones
+                    ],
                     "Cantidad por Tonelada (kg)": [
                         round(p * 10, 2) for p in proporciones
                     ],
                 }
             )
 
-            st.table(res_df)
+            # Filtrar ingredientes con inclusión mayor a 0.01%
+            res_df_filtrado = res_df[res_df["Inclusión en la Dieta (%)"] > 0.05]
+
+            st.table(res_df_filtrado)
             st.metric(
-                label="Costo Estimado de la Dieta",
+                label="Costo Estimado de la Fórmula",
                 value=f"${costo_total_kg:.2f} MXN / kg",
             )
         else:
             st.error(
-                "⚠️ No se encontró solución factible con los precios o restricciones actuales. Ajuste los requerimientos o márgenes de ingredientes."
+                "⚠️ No se encontró una solución factible con los precios o restricciones actuales. Intenta ajustar los rangos de costos o relajar ligeramente las restricciones de nutrientes."
             )
 
 # ==========================================
@@ -397,5 +439,5 @@ with tab_lactancia:
 
 st.markdown("---")
 st.caption(
-    "PorcinoMetrics v2.0 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v3.0 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
