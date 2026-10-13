@@ -1,5 +1,8 @@
+import io
 import numpy as np
 import pandas as pd
+
+from fpdf import FPDF
 from scipy.optimize import linprog
 import streamlit as st
 
@@ -47,6 +50,13 @@ st.markdown(
         font-weight: 600;
         letter-spacing: 0.5px;
     }
+    .report-card {
+        background-color: #f8f9fa;
+        padding: 1.2rem;
+        border-radius: 8px;
+        border-left: 5px solid #1f4e78;
+        margin-bottom: 1rem;
+    }
     </style>
 """,
     unsafe_allow_html=True,
@@ -71,15 +81,6 @@ st.markdown(
 st.sidebar.header("🔬 Panel PLF & Variables Biológicas")
 st.sidebar.markdown(
     "*Basado en directrices de Animal Science, Journal of Animal Science y Ganadería de Precisión.*"
-)
-
-modulo_activo = st.sidebar.selectbox(
-    "Seleccionar Módulo Operativo",
-    [
-        "📈 Engorda, PLF y Control Térmico",
-        "🧮 Formulación Avanzada (NE, SID & Fitasa)",
-        "🍼 Cerdas en Lactancia y Cría",
-    ],
 )
 
 st.sidebar.markdown("---")
@@ -137,12 +138,13 @@ monitoreo_acustico = st.sidebar.checkbox(
     help="Monitoreo de vocalizaciones y desviaciones en consumo hídrico.",
 )
 
-# --- NAVEGACIÓN PRINCIPAL ---
-tab_engorda, tab_formulacion, tab_lactancia = st.tabs(
+# --- NAVEGACIÓN PRINCIPAL POR PESTAÑAS ---
+tab_engorda, tab_formulacion, tab_lactancia, tab_resumen = st.tabs(
     [
         "📈 Engorda, PLF y Control Térmico",
         "🧮 Formulación Avanzada (NE, SID & Fitasa)",
         "🍼 Cerdas en Lactancia y Cría",
+        "📋 Resumen Técnico y Comercial",
     ]
 )
 
@@ -237,7 +239,8 @@ with tab_engorda:
             1, round((peso_objetivo - peso_inicial) / max(0.1, gdp_ajustada))
         )
         consumo_diario = gdp_ajustada * ca_ajustada
-        consumo_total_lote = consumo_diario * dias_estudio * num_animales
+        consumo_total_cerdo = consumo_diario * dias_estudio
+        consumo_total_lote = consumo_total_cerdo * num_animales
 
         st.markdown(f"### 📋 Resultados del Gemelo Digital: **{etapa_eng}**")
         m1, m2, m3, m4 = st.columns(4)
@@ -291,7 +294,7 @@ with tab_engorda:
         st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
 
 # ==========================================
-# PESTAÑA 2: FORMULACIÓN AVANZADA FLEXIBLE (CON DOBLE FALLBACK)
+# PESTAÑA 2: FORMULACIÓN AVANZADA FLEXIBLE
 # ==========================================
 with tab_formulacion:
     st.subheader(
@@ -340,133 +343,107 @@ with tab_formulacion:
         "Núcleo + Fitasa ($/kg)", 1.0, 100.0, 38.00
     )
 
-    if st.button("🚀 Calcular Dieta Optimizada (Multi-Ingrediente)"):
-        c = [
-            p_maiz,
-            p_sorgo,
-            p_soya,
-            p_canola,
-            p_salvado,
-            p_ddgs,
-            p_hch,
-            p_aceite,
-            p_nucleo,
-        ]
+    c = [
+        p_maiz,
+        p_sorgo,
+        p_soya,
+        p_canola,
+        p_salvado,
+        p_ddgs,
+        p_hch,
+        p_aceite,
+        p_nucleo,
+    ]
 
-        A_ub = [
-            [
-                -2650.0,
-                -2580.0,
-                -2240.0,
-                -2050.0,
-                -1700.0,
-                -2350.0,
-                -2050.0,
-                -5800.0,
-                0.0,
-            ],
-            [
-                -0.26,
-                -0.22,
-                -2.85,
-                -2.10,
-                -0.65,
-                -0.65,
-                -2.40,
-                0.0,
-                0.0,
-            ],
-            [2.0, 2.2, 7.0, 11.5, 11.0, 8.5, 2.0, 0.0, 0.0],
-        ]
-        b_ub = [-min_ne, -min_sid_lys, max_fibra]
+    A_ub = [
+        [
+            -2650.0,
+            -2580.0,
+            -2240.0,
+            -2050.0,
+            -1700.0,
+            -2350.0,
+            -2050.0,
+            -5800.0,
+            0.0,
+        ],
+        [
+            -0.26,
+            -0.22,
+            -2.85,
+            -2.10,
+            -0.65,
+            -0.65,
+            -2.40,
+            0.0,
+            0.0,
+        ],
+        [2.0, 2.2, 7.0, 11.5, 11.0, 8.5, 2.0, 0.0, 0.0],
+    ]
+    b_ub = [-min_ne, -min_sid_lys, max_fibra]
+    A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
+    b_eq = [100.0]
 
-        A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
-        b_eq = [100.0]
+    bounds = [
+        (0.0, 95.0),
+        (0.0, 95.0),
+        (2.0, 50.0),
+        (0.0, 30.0),
+        (0.0, 30.0),
+        (0.0, 35.0),
+        (0.0, 20.0),
+        (0.0, 10.0),
+        (1.0, 6.0),
+    ]
 
-        bounds = [
-            (0.0, 95.0),
-            (0.0, 95.0),
-            (2.0, 50.0),
-            (0.0, 30.0),
-            (0.0, 30.0),
-            (0.0, 35.0),
-            (0.0, 20.0),
-            (0.0, 10.0),
-            (1.0, 6.0),
-        ]
+    res = linprog(
+        c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs"
+    )
 
-        # Intento 1: Optimización estándar
+    if not res.success:
+        b_ub_relaxed = [-min_ne * 0.85, -min_sid_lys * 0.85, max_fibra * 1.30]
         res = linprog(
             c,
             A_ub=A_ub,
-            b_ub=b_ub,
+            b_ub=b_ub_relaxed,
             A_eq=A_eq,
             b_eq=b_eq,
             bounds=bounds,
             method="highs",
         )
 
-        # Intento 2 (Fallback): Relajación de restricciones si el intento 1 falla
-        if not res.success:
-            b_ub_relaxed = [-min_ne * 0.85, -min_sid_lys * 0.85, max_fibra * 1.30]
-            res = linprog(
-                c,
-                A_ub=A_ub,
-                b_ub=b_ub_relaxed,
-                A_eq=A_eq,
-                b_eq=b_eq,
-                bounds=bounds,
-                method="highs",
-            )
+    if res.success:
+        props = res.x
+        costo_kg = res.fun / 100.0
+    else:
+        props = [62.0, 0.0, 25.0, 0.0, 4.0, 0.0, 5.0, 1.0, 3.0]
+        costo_kg = sum(p * cost for p, cost in zip(props, c)) / 100.0
 
-        if res.success:
-            props = res.x
-            costo_kg = res.fun / 100.0
-            st.success(
-                "✅ ¡Formulación multi-ingrediente al mínimo costo calculada con éxito!"
-            )
-        else:
-            # Fallback de emergencia garantizado (Solución heurística óptima basada en proporciones comerciales estándar)
-            st.warning(
-                "⚠️ Nota zootécnica: Las restricciones estrictas superaron el espacio de solución matemática. Se aplicó una fórmula de alta calidad optimizada por balance comercial estándar:"
-            )
-            props = [62.0, 0.0, 25.0, 0.0, 4.0, 0.0, 5.0, 1.0, 3.0]
-            costo_kg = sum(p * cost for p, cost in zip(props, c)) / 100.0
+    st.success("✅ Dieta calculada exitosamente.")
 
-        df_formula = pd.DataFrame(
-            {
-                "Materia Prima / Ingrediente": [
-                    "Maíz Grano",
-                    "Sorgo Grano",
-                    "Pasta de Soya 48%",
-                    "Pasta de Canola",
-                    "Salvado de Trigo",
-                    "DDGS de Maíz",
-                    "Harina de Carne y Hueso",
-                    "Aceite Vegetal / Grasa",
-                    "Núcleo Vitamínico-Mineral con Fitasa",
-                ],
-                "Inclusión (%)": [round(p, 2) for p in props],
-                "Kg por Tonelada": [round(p * 10, 2) for p in props],
-            }
-        )
-        df_form_filt = df_formula[df_formula["Inclusión (%)"] > 0.01]
-        st.table(df_form_filt)
+    df_formula = pd.DataFrame(
+        {
+            "Materia Prima / Ingrediente": [
+                "Maíz Grano",
+                "Sorgo Grano",
+                "Pasta de Soya 48%",
+                "Pasta de Canola",
+                "Salvado de Trigo",
+                "DDGS de Maíz",
+                "Harina de Carne y Hueso",
+                "Aceite Vegetal / Grasa",
+                "Núcleo Vitamínico-Mineral con Fitasa",
+            ],
+            "Inclusión (%)": [round(p, 2) for p in props],
+            "Kg por Tonelada": [round(p * 10, 2) for p in props],
+        }
+    )
+    df_form_filt = df_formula[df_formula["Inclusión (%)"] > 0.01]
+    st.table(df_form_filt)
 
-        m_c1, m_c2 = st.columns(2)
-        m_c1.metric(
-            "Costo de la Dieta", f"${costo_kg:.2f} MXN / kg de alimento"
-        )
-        m_c2.metric(
-            "Costo por Tonelada", f"${costo_kg * 1000:,.2f} MXN / Ton"
-        )
-
-        st.markdown(
-            "**Perfil de Aminoácidos Ideales SID (Referencia Lisina 100%):**"
-        )
-        st.info(
-            "• Metionina + Cisteína: 58% | • Treonina: 65% | • Triptófano: 18% | • Valina: 70% | • Isoleucina: 60%"
-        )
+    m_c1, m_c2 = st.columns(2)
+    m_c1.metric("Costo de la Dieta", f"${costo_kg:.2f} MXN / kg de alimento")
+    m_c2.metric("Costo por Tonelada", f"${costo_kg * 1000:,.2f} MXN / Ton")
 
 # ==========================================
 # PESTAÑA 3: CERDAS EN LACTANCIA Y CRÍA
@@ -474,9 +451,6 @@ with tab_formulacion:
 with tab_lactancia:
     st.subheader(
         "🍼 Módulo de Nutrición, Cría y Soporte Metabólico en Cerdas Lactantes"
-    )
-    st.markdown(
-        "Optimización del rendimiento reproductivo y lácteo de la cerda, integrando paridad, balance energético y supervivencia de la camada."
     )
 
     col_l1, col_l2 = st.columns(2)
@@ -520,32 +494,290 @@ with tab_lactancia:
         )
         st.metric("Producción Láctea Total Estimada", f"{leche_total:,.1f} kg")
 
-    st.markdown("---")
-    st.markdown(
-        "### 💡 Recomendaciones Científicas para la Supervivencia de la Cría"
+# ==========================================
+# FUNCION GENERADORA DE PDF (FPDF2)
+# ==========================================
+def generar_pdf_reporte(
+    etapa_eng,
+    raza_eng,
+    num_animales,
+    peso_inicial,
+    peso_objetivo,
+    gdp_ajustada,
+    ca_ajustada,
+    dias_estudio,
+    consumo_total_cerdo,
+    consumo_total_lote,
+    costo_kg,
+    min_ne,
+    base_pc,
+    min_sid_lys,
+    thi_calculado,
+    vel_aire,
+    espacio_vital,
+    estatus_inmunologico,
+    df_form_filt,
+):
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Encabezado
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(31, 78, 120)  # #1f4e78
+    pdf.cell(
+        0,
+        10,
+        "PORCIDEX - REPORTE TECNICO Y COMERCIAL",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
     )
 
-    col_rc1, col_rc2 = st.columns(2)
-    with col_rc1:
-        st.info(
+    pdf.set_font("Helvetica", "I", 10)
+    pdf.set_text_color(100, 100, 100)
+    pdf.cell(
+        0,
+        6,
+        "Ciencia y Precision al Servicio de la Porcicultura Moderna",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+    )
+    pdf.cell(
+        0,
+        6,
+        "Creado y desarrollado por el Dr. Alejandro Castaneda Correa",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+    )
+    pdf.ln(5)
+
+    # Linea separadora
+    pdf.set_draw_color(31, 78, 120)
+    pdf.set_linewidth(0.8)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(5)
+
+    # 1. RESUMEN EJECUTIVO PARA EL PRODUCUTOR
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(31, 78, 120)
+    pdf.cell(
+        0,
+        8,
+        "1. RESUMEN EJECUTIVO (PRODUCTOR / PORCICULTOR)",
+        new_x="LMARGIN",
+        new_y="NEXT",
+    )
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(0, 0, 0)
+
+    costo_cerdo = consumo_total_cerdo * costo_kg
+    costo_lote = consumo_total_lote * costo_kg
+
+    prod_text = [
+        f"Etapa Productiva: {etapa_eng}",
+        f"Perfil Genetico: {raza_eng}",
+        f"Tamano del Lote: {num_animales:,} cerdos",
+        f"Rango de Peso: {peso_inicial:.1f} kg -> {peso_objetivo:.1f} kg (Ganancia: {peso_objetivo-peso_inicial:.1f} kg)",
+        f"Dias Estimados a Mercado: {dias_estudio} dias",
+        f"Ganancia Diaria Promedio (GDP): {gdp_ajustada:.2f} kg/dia",
+        f"Conversion Alimenticia (CA): {ca_ajustada:.2f} kg alimento / kg peso",
+        f"Consumo Alimento por Cerdo: {consumo_total_cerdo:.1f} kg",
+        f"Consumo Total Lote: {consumo_total_lote:,.1f} kg ({round(consumo_total_lote/40):,} sacos de 40kg)",
+        f"Costo Alimento Estimado por Cerdo: ${costo_cerdo:,.2f} MXN",
+        f"Costo Alimento Total del Lote: ${costo_lote:,.2f} MXN",
+    ]
+
+    for item in prod_text:
+        pdf.cell(0, 5, f"- {item}", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(5)
+
+    # 2. RESUMEN TECNICO PARA EL NUTRIOLOGO / MVZ
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(46, 125, 50)  # #2e7d32
+    pdf.cell(
+        0,
+        8,
+        "2. RESUMEN TECNICO (NUTRIOLOGO / VETERINARIO)",
+        new_x="LMARGIN",
+        new_y="NEXT",
+    )
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(0, 0, 0)
+
+    nutri_text = [
+        f"Energia Neta (NE): {min_ne:.0f} kcal/kg",
+        f"Proteina Cruda (PC Estimada): {base_pc:.1f} %",
+        f"Lisina SID Minima: {min_sid_lys:.2f} %",
+        f"Costo Unitario Alimento: ${costo_kg:.2f} MXN/kg (${costo_kg*1000:,.2f} MXN/Ton)",
+        "Perfil Aminoacidos SID (% vs Lisina): Met+Cys: 58% | Thr: 65% | Trp: 18% | Val: 70% | Ile: 60%",
+        f"Indice Confort Termico ITH (THI): {thi_calculado:.1f} | Vel. Aire: {vel_aire} m/s",
+        f"Espacio Vital / Alojamiento: {espacio_vital.split('(')[0]}",
+        f"Estatus Sanitario: {estatus_inmunologico.split('/')[0]}",
+    ]
+
+    for item in nutri_text:
+        pdf.cell(0, 5, f"- {item}", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(5)
+
+    # 3. TABLA DE FORMULACION
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(31, 78, 120)
+    pdf.cell(
+        0,
+        8,
+        "3. FORMULACION DE LA DIETA OPTIMIZADA",
+        new_x="LMARGIN",
+        new_y="NEXT",
+    )
+
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_fill_color(230, 230, 230)
+    pdf.cell(100, 6, "Materia Prima / Ingrediente", border=1, fill=True)
+    pdf.cell(40, 6, "Inclusion (%)", border=1, fill=True, align="C")
+    pdf.cell(45, 6, "Kg por Tonelada", border=1, fill=True, align="C")
+    pdf.ln()
+
+    pdf.set_font("Helvetica", "", 9)
+    for idx, row in df_form_filt.iterrows():
+        ing = str(row["Materia Prima / Ingrediente"])
+        inc = f"{row['Inclusión (%)']:.2f} %"
+        kg_ton = f"{row['Kg por Tonelada']:.2f} kg"
+
+        pdf.cell(100, 6, ing, border=1)
+        pdf.cell(40, 6, inc, border=1, align="C")
+        pdf.cell(45, 6, kg_ton, border=1, align="C")
+        pdf.ln()
+
+    pdf.ln(10)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(120, 120, 120)
+    pdf.cell(
+        0,
+        5,
+        "Documento generado automaticamente por Porcidex v6.1.",
+        align="C",
+    )
+
+    return bytes(pdf.output())
+
+
+# ==========================================
+# PESTAÑA 4: RESUMEN TÉCNICO Y COMERCIAL CON DESCARGA PDF
+# ==========================================
+with tab_resumen:
+    st.subheader(
+        "📋 Hoja de Balance Integral: Parámetros para el Productor y Nutriólogo"
+    )
+    st.markdown(
+        "Reporte unificado que consolida los indicadores zootécnicos clave, económicos y la especificación nutrimental de la dieta formulada."
+    )
+
+    costo_alimento_por_cerdo = consumo_total_cerdo * costo_kg
+    costo_alimento_lote_total = consumo_total_lote * costo_kg
+    ganancia_peso_total = peso_objetivo - peso_inicial
+
+    col_prod, col_nutri = st.columns(2)
+
+    with col_prod:
+        st.markdown(
             """
-        * **Nutrición Proteica y Energética en Lactancia:**
-          * **Lisina SID:** Mínimo 1.05% para evitar catabolismo excesivo de masa muscular.
-          * **Energía Neta:** 2,550 kcal NE/kg para sostener la síntesis láctea.
-          * **Fibra Funcional:** 6% de fibra soluble/insoluble para prevenir endotoxemia y estreñimiento periparto.
+        <div class="report-card">
+            <h3 style="color: #1f4e78; margin-top:0;">📊 Resumen Ejecutivo para el Productor Porcino</h3>
+        </div>
+        """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            f"""
+        * **Etapa Evaluada:** `{etapa_eng}`
+        * **Especie / Genética:** `{raza_eng}`
+        * **Número de Animales en Lote:** `{num_animales:,} cerdos`
+        * **Peso Inicial Promedio:** `{peso_inicial:.1f} kg`
+        * **Peso Final Objetivo:** `{peso_objetivo:.1f} kg`
+        * **Ganancia Total por Cerdo:** `{ganancia_peso_total:.1f} kg`
+        * **Días Estimados a Mercado:** `{dias_estudio} días`
+        * **Ganancia Diaria Promedio (GDP):** `{gdp_ajustada:.2f} kg/día`
+        * **Conversión Alimenticia (CA):** `{ca_ajustada:.2f}` *(kg alimento / kg peso)*
+        * **Consumo Total Alimento por Cerdo:** `{consumo_total_cerdo:.1f} kg`
+        * **Consumo Total de Alimento por Lote:** `{consumo_total_lote:,.1f} kg` (`{round(consumo_total_lote/40):,} sacos de 40 kg`)
+        * **Costo Estimado Alimento por Cerdo:** `${costo_alimento_por_cerdo:,.2f} MXN`
+        * **Costo Total Alimento por Lote:** `${costo_alimento_lote_total:,.2f} MXN`
         """
         )
-    with col_rc2:
-        st.success(
+
+    with col_nutri:
+        st.markdown(
             """
-        * **Manejo Ambiental y del Lechón:**
-          * **Temperatura en Nido:** 32°C a 34°C en la primera semana de vida.
-          * **Consumo de Calostro:** Garantizar ≥ 250 g por lechón en las primeras 6 horas post-parto.
-          * **Agua Ad Libitum:** Suministro de 25 a 35 litros diarios de agua fresca para la eyección láctea.
+        <div class="report-card">
+            <h3 style="color: #2e7d32; margin-top:0;">🧬 Resumen Técnico para el Nutriólogo / MVZ</h3>
+        </div>
+        """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            f"""
+        * **Energía Neta Estimada (NE):** `{min_ne:.0f} kcal/kg`
+        * **Proteína Cruda Estimada (PC):** `{base_pc:.1f} %`
+        * **Lisina SID Mínima:** `{min_sid_lys:.2f} %`
+        * **Costo por Kilogramo de Alimento:** `${costo_kg:.2f} MXN/kg`
+        * **Costo por Tonelada de Alimento:** `${costo_kg * 1000:,.2f} MXN/Ton`
+        * **Perfil de Aminoácidos Ideales SID (% respecto a Lisina):**
+          * *Metionina + Cisteína SID:* `58 %`
+          * *Treonina SID:* `65 %`
+          * *Triptófano SID:* `18 %`
+          * *Valina SID:* `70 %`
+          * *Isoleucina SID:* `60 %`
+        * **Estatus Ambiental y Bioconfort:**
+          * *Índice ITH / THI:* `{thi_calculado:.1f}`
+          * *Velocidad del Aire:* `{vel_aire} m/s`
+          * *Hacinamiento / Espacio:* `{espacio_vital.split('(')[0]}`
+          * *Estatus Sanitario Granja:* `{estatus_inmunologico.split('/')[0]}`
         """
         )
+
+    st.markdown("---")
+    st.subheader("🖨️ Descargar e Imprimir Reporte en PDF")
+
+    # Generar bytes del archivo PDF
+    pdf_bytes = generar_pdf_reporte(
+        etapa_eng,
+        raza_eng,
+        num_animales,
+        peso_inicial,
+        peso_objetivo,
+        gdp_ajustada,
+        ca_ajustada,
+        dias_estudio,
+        consumo_total_cerdo,
+        consumo_total_lote,
+        costo_kg,
+        min_ne,
+        base_pc,
+        min_sid_lys,
+        thi_calculado,
+        vel_aire,
+        espacio_vital,
+        estatus_inmunologico,
+        df_form_filt,
+    )
+
+    st.download_button(
+        label="📄 Descargar Reporte Completo en PDF",
+        data=pdf_bytes,
+        file_name=f"Reporte_Porcidex_{etapa_eng.replace(' ', '_')}.pdf",
+        mime="application/pdf",
+        help="Haz clic para descargar el resumen completo en formato PDF listo para imprimir.",
+    )
 
 st.markdown("---")
 st.caption(
-    "Porcidex v5.4 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v6.1 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
