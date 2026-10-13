@@ -10,49 +10,60 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- ESTILOS CSS PERSONALIZADOS ---
+# --- ESTILOS CSS PERSONALIZADOS Y LOGOTIPO EMBLEMÁTICO ---
 st.markdown(
     """
     <style>
-    .main-header {
-        font-size: 2.2rem;
-        color: #1f4e78;
-        font-weight: bold;
+    .brand-container {
+        background: linear-gradient(135deg, #1f4e78 0%, #112233 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        color: white;
+        text-align: center;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
-    .sub-header {
-        font-size: 1.2rem;
-        color: #595959;
+    .brand-logo {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+    .brand-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin: 0;
+        color: #ffffff;
+    }
+    .brand-slogan {
+        font-size: 1.25rem;
+        font-style: italic;
+        color: #d9e1e8;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
     }
     .creator-tag {
-        font-style: italic;
-        color: #2e7d32;
-        font-weight: bold;
+        font-size: 0.95rem;
+        color: #a9dfbf;
+        font-weight: 600;
+        letter-spacing: 0.5px;
     }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# --- ENCABEZADO Y CRÉDITOS ---
-col_logo, col_title = st.columns([1, 5])
-with col_logo:
-    st.markdown("<h1>🐖📊</h1>", unsafe_allow_html=True)
-with col_title:
-    st.markdown(
-        '<p class="main-header">Porcidex: Sistema Integral Porcino</p>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<p class="sub-header">"Nutrición de precisión, optimización de costos y manejo reproductivo"</p>',
-        unsafe_allow_html=True,
-    )
-
-st.markdown("---")
+# --- CABECERA CON LOGOTIPO Y SLOGAN EMBLEMÁTICO ---
 st.markdown(
-    '<p class="creator-tag">Creado y desarrollado por el Dr. Alejandro Castañeda Correa</p>',
+    """
+    <div class="brand-container">
+        <div class="brand-logo">🐖⚡</div>
+        <h1 class="brand-title">PORCIDEX</h1>
+        <p class="brand-slogan">"Ciencia y Precisión al Servicio de la Porcicultura Moderna"</p>
+        <p class="creator-tag">Creado y desarrollado por el Dr. Alejandro Castañeda Correa</p>
+    </div>
+""",
     unsafe_allow_html=True,
 )
-st.markdown("---")
 
 # --- NAVEGACIÓN POR PESTAÑAS ---
 tab_engorda, tab_formulacion, tab_lactancia = st.tabs(
@@ -236,7 +247,7 @@ with tab_formulacion:
         "🧮 Optimización Lineal de Dietas (Least-Cost Feed Formulation)"
     )
     st.markdown(
-        "Sistema de programación lineal multivariable para calcular la racha óptima combinando múltiples materias primas al mínimo costo por kilogramo."
+        "Sistema de programación lineal multivariable para calcular la ración óptima combinando múltiples materias primas al mínimo costo por kilogramo."
     )
 
     col_f1, col_f2 = st.columns(2)
@@ -252,14 +263,13 @@ with tab_formulacion:
             ],
         )
 
-    # Requerimientos nutricionales mínimos y máximos según etapa
     if req_etapa == "Iniciación":
         min_pc, min_em, max_fibra = 21.0, 3250.0, 3.5
     elif req_etapa == "Desarrollo":
         min_pc, min_em, max_fibra = 17.5, 3150.0, 5.0
     elif req_etapa == "Finalización":
         min_pc, min_em, max_fibra = 14.5, 3050.0, 6.0
-    else:  # Cerdas de Recría
+    else:
         min_pc, min_em, max_fibra = 16.0, 3100.0, 7.5
 
     st.markdown("### 💰 Ingrese Costos Unitarios de Ingredientes ($ / kg)")
@@ -279,7 +289,6 @@ with tab_formulacion:
     )
 
     if st.button("🚀 Optimizar Dieta con Múltiples Ingredientes"):
-        # Vector de costos [Maíz, Soya, Canola, Salvado, Aceite, Mineral]
         c = [
             precio_maiz,
             precio_soya,
@@ -289,32 +298,23 @@ with tab_formulacion:
             precio_mineral,
         ]
 
-        # Matriz Nutricional de Ingredientes (Filas: PC, EM, Fibra)
-        # Orden: [Maíz, Soya, Canola, Salvado, Aceite, Mineral]
-        # PC (%):  [ 8.5, 48.0, 36.0, 15.0,  0.0,  0.0]
-        # EM (kcal):[3350, 3200, 2800, 2500, 8500,  0.0]
-        # Fibra (%):[ 2.0,  7.0, 11.5, 11.0,  0.0,  0.0]
-
         A_ub = [
-            [-8.5, -48.0, -36.0, -15.0, 0.0, 0.0],  # -PC >= min_pc
-            [-3350.0, -3200.0, -2800.0, -2500.0, -8500.0, 0.0],  # -EM >= min_em
-            [2.0, 7.0, 11.5, 11.0, 0.0, 0.0],  # Fibra <= max_fibra
+            [-8.5, -48.0, -36.0, -15.0, 0.0, 0.0],
+            [-3350.0, -3200.0, -2800.0, -2500.0, -8500.0, 0.0],
+            [2.0, 7.0, 11.5, 11.0, 0.0, 0.0],
         ]
         b_ub = [-min_pc, -min_em, max_fibra]
 
-        # Restricción de igualdad: la sumatoria de proporciones debe ser 100%
         A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
         b_eq = [100.0]
 
-        # Límites lógicos de inclusión para cada ingrediente (%)
-        # [Maíz, Soya, Canola, Salvado, Aceite, Mineral]
         bounds = [
-            (40.0, 85.0),  # Maíz
-            (5.0, 40.0),  # Pasta Soya
-            (0.0, 20.0),  # Pasta Canola
-            (0.0, 20.0),  # Salvado de Trigo
-            (0.0, 5.0),  # Aceite / Grasa
-            (1.5, 3.5),  # Núcleo Mineral (Fijo por requerimiento macro/micronutrientes)
+            (40.0, 85.0),
+            (5.0, 40.0),
+            (0.0, 20.0),
+            (0.0, 20.0),
+            (0.0, 5.0),
+            (1.5, 3.5),
         ]
 
         res = linprog(
@@ -352,7 +352,6 @@ with tab_formulacion:
                 }
             )
 
-            # Filtrar ingredientes con inclusión mayor a 0.01%
             res_df_filtrado = res_df[res_df["Inclusión en la Dieta (%)"] > 0.05]
 
             st.table(res_df_filtrado)
@@ -439,5 +438,5 @@ with tab_lactancia:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v3.0 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v3.1 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
