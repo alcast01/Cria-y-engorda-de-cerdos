@@ -33,7 +33,7 @@ st.markdown(
 # --- ENCABEZADO Y CRÉDITOS ---
 col_logo, col_title = st.columns([1, 5])
 with col_logo:
-    st.markdown("<h1>🐖</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>🐖📊</h1>", unsafe_allow_html=True)
 with col_title:
     st.markdown(
         '<p class="main-header">PorcinoMetrics: Módulo de Engorda Porcina</p>',
@@ -103,7 +103,7 @@ num_animales = st.sidebar.number_input(
 
 # --- MODELO DE CÁLCULO Y AJUSTE POR ESTRÉS TÉRMICO ---
 
-# Rango de confort térmico según etapa (Ejemplo simplificado)
+# Rango de confort térmico según etapa
 if etapa == "Iniciación":
     temp_optima = 24.0
     base_gdp = 0.65  # Ganancia Diaria de Peso base (kg/día)
@@ -171,7 +171,7 @@ with col2:
         label="Conversión Alimenticia (CA)",
         value=f"{ca_ajustada:.2f}",
         delta=f"{((ca_ajustada - base_ca)/base_ca)*100:.1f}%",
-        delta_inverse=True,
+        delta_color="inverse",
     )
 
 with col3:
@@ -190,12 +190,13 @@ col_nutri, col_amb = st.columns(2)
 
 with col_nutri:
     st.subheader("🧬 Especificaciones Nutricionales Sugeridas")
+    sacos_totales = round(consumo_total_lote / 40)
     st.info(
         f"""
     * **Proteína Cruda (PC):** {base_pc:.1f} %
     * **Energía Metabolizable (EM):** {base_em} kcal/kg
     * **Consumo Total de Alimento por Lote:** {consumo_total_lote:,.1f} kg
-    * **Cantidad Total de Sacos (40 kg):** {ceil_val := round(consumo_total_lote / 40)} sacos
+    * **Cantidad Total de Sacos (40 kg):** {sacos_totales} sacos
     """
     )
 
@@ -226,21 +227,3 @@ pesos_proyectados = [
 
 df_proyeccion = pd.DataFrame(
     {
-        "Día": semanas,
-        "Peso Promedio Proyectado (kg)": [round(p, 2) for p in pesos_proyectados],
-        "Consumo Acumulado por Animal (kg)": [
-            round(consumo_diario_estimado * d, 2) for d in semanas
-        ],
-    }
-)
-
-st.line_chart(
-    df_proyeccion.set_index("Día"),
-    y=["Peso Promedio Proyectado (kg)"],
-    color=["#1f4e78"],
-)
-
-st.markdown("---")
-st.caption(
-    "PorcinoMetrics v1.0 | Desarrollado para gestión avanzada en producción porcina."
-)
