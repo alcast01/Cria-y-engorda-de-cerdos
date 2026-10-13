@@ -292,12 +292,14 @@ with tab_engorda:
         st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
 
 # ==========================================
-# PESTAÑA 2: FORMULACIÓN AVANZADA (NE, SID & FITASA)
+# PESTAÑA 2: FORMULACIÓN AVANZADA MULTI-INGREDIENTE
 # ==========================================
 with tab_formulacion:
-    st.subheader("🧮 Optimización Lineal por Energía Neta (NE) y Proteína Ideal SID")
+    st.subheader(
+        "🧮 Optimización Lineal Multi-Ingrediente (NE, SID & Fitasa)"
+    )
     st.markdown(
-        "Formulación matemática de precisión utilizando sistemas de **Energía Neta**, perfiles de **Aminoácidos Digestibles Estandarizados (SID)** con referencia a Lisina, y matriz de liberación por **Fitases de Nueva Generación**."
+        "Sistema ampliado de programación lineal que integra cereales, subproductos de alta calidad, proteínas vegetales y animales para minimizar el costo por kilogramo de ganancia sin comprometer la calidad de la canal."
     )
 
     col_f1, col_f2 = st.columns(2)
@@ -310,9 +312,9 @@ with tab_formulacion:
                 "Finalización (70-115 kg)",
                 "Cerdas de Recría / Remonta",
             ],
+            key="etap_form_multi",
         )
 
-    # Requerimientos ajustados para garantizar total factibilidad matemática
     if "Iniciación" in etapa_form:
         min_ne, min_sid_lys, max_fibra = 2400.0, 1.05, 4.0
     elif "Desarrollo" in etapa_form:
@@ -322,43 +324,86 @@ with tab_formulacion:
     else:
         min_ne, min_sid_lys, max_fibra = 2280.0, 0.70, 8.0
 
-    st.markdown("### 💰 Costos Unitarios de Materias Primas ($ / kg)")
-    ic1, ic2, ic3 = st.columns(3)
+    st.markdown("### 💰 Costos Unitarios de Ingredientes y Materias Primas ($ / kg)")
+
+    ic1, ic2, ic3, ic4 = st.columns(4)
     p_maiz = ic1.number_input("Maíz Grano ($/kg)", 2.0, 15.0, 5.50)
-    p_soya = ic2.number_input("Pasta de Soya 48% ($/kg)", 5.0, 25.0, 12.00)
-    p_canola = ic3.number_input("Pasta de Canola ($/kg)", 4.0, 20.0, 8.50)
+    p_sorgo = ic2.number_input("Sorgo Grano ($/kg)", 2.0, 15.0, 5.20)
+    p_soya = ic3.number_input("Pasta de Soya 48% ($/kg)", 5.0, 25.0, 12.00)
+    p_canola = ic4.number_input("Pasta de Canola ($/kg)", 4.0, 20.0, 8.50)
 
-    ic4, ic5, ic6 = st.columns(3)
-    p_salvado = ic4.number_input("Salvado de Trigo ($/kg)", 1.5, 10.0, 4.00)
-    p_aceite = ic5.number_input(
-        "Aceite Vegetal / Grasa de Soya ($/kg)", 10.0, 40.0, 22.00
+    ic5, ic6, ic7, ic8, ic9 = st.columns(5)
+    p_salvado = ic5.number_input("Salvado de Trigo ($/kg)", 1.5, 10.0, 4.00)
+    p_ddgs = ic6.number_input("DDGS de Maíz ($/kg)", 3.0, 15.0, 6.80)
+    p_hch = ic7.number_input("Harina de Carne y Hueso ($/kg)", 5.0, 22.0, 9.50)
+    p_aceite = ic8.number_input("Aceite / Grasa ($/kg)", 10.0, 40.0, 22.00)
+    p_nucleo = ic9.number_input(
+        "Núcleo + Fitasa ($/kg)", 10.0, 80.0, 38.00
     )
-    p_nucleo = ic6.number_input(
-        "Núcleo Vitamínico-Mineral + Fitasa ($/kg)", 10.0, 80.0, 38.00
-    )
 
-    if st.button("🚀 Calcular Dieta de Mínimo Costo (NE & SID)"):
-        c = [p_maiz, p_soya, p_canola, p_salvado, p_aceite, p_nucleo]
+    if st.button("🚀 Calcular Dieta Optimizada (Multi-Ingrediente)"):
+        # Vector de costos para 9 ingredientes:
+        # [Maíz, Sorgo, Soya, Canola, Salvado, DDGS, HCH, Aceite, Núcleo]
+        c = [
+            p_maiz,
+            p_sorgo,
+            p_soya,
+            p_canola,
+            p_salvado,
+            p_ddgs,
+            p_hch,
+            p_aceite,
+            p_nucleo,
+        ]
 
-        # Matriz A_ub ajustada a restricciones robustas
+        # Matriz Nutricional (9 ingredientes x 3 restricciones de desigualdad: NE, SID Lys, Fibra)
+        # Ingredientes: [Maíz, Sorgo, Soya, Canola, Salvado, DDGS, HCH, Aceite, Núcleo]
+        # 1. NE (kcal/kg): [2650, 2580, 2240, 2050, 1700, 2350, 2050, 5800, 0]
+        # 2. SID Lys (%):  [0.26, 0.22, 2.85, 2.10, 0.65, 0.65, 2.40,  0.0, 0]
+        # 3. Fibra (%):    [ 2.0,  2.2,  7.0, 11.5, 11.0,  8.5,  2.0,  0.0, 0]
+
         A_ub = [
-            [-2650.0, -2240.0, -2050.0, -1700.0, -5800.0, 0.0],  # -NE >= min_ne
-            [-0.26, -2.85, -2.10, -0.65, 0.0, 0.0],  # -SID Lys >= min_sid_lys
-            [2.0, 7.0, 11.5, 11.0, 0.0, 0.0],  # Fibra <= max_fibra
+            [
+                -2650.0,
+                -2580.0,
+                -2240.0,
+                -2050.0,
+                -1700.0,
+                -2350.0,
+                -2050.0,
+                -5800.0,
+                0.0,
+            ],  # -NE >= min_ne
+            [
+                -0.26,
+                -0.22,
+                -2.85,
+                -2.10,
+                -0.65,
+                -0.65,
+                -2.40,
+                0.0,
+                0.0,
+            ],  # -SID Lys >= min_sid_lys
+            [2.0, 2.2, 7.0, 11.5, 11.0, 8.5, 2.0, 0.0, 0.0],  # Fibra <= max_fibra
         ]
         b_ub = [-min_ne, -min_sid_lys, max_fibra]
 
-        A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
+        # Restricción de igualdad: Suma de porcentajes = 100%
+        A_eq = [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]
         b_eq = [100.0]
 
-        # Rangos de inclusión flexibles y realistas (bounds)
+        # Límites de inclusión realistas para cerdos de engorda (bounds)
         bounds = [
-            (35.0, 88.0),  # Maíz
-            (5.0, 42.0),   # Soya
-            (0.0, 20.0),   # Canola
-            (0.0, 20.0),   # Salvado
-            (0.0, 6.0),    # Aceite
-            (1.5, 4.0),    # Núcleo con Fitasa
+            (0.0, 75.0),  # Maíz Grano
+            (0.0, 50.0),  # Sorgo Grano
+            (5.0, 38.0),  # Pasta de Soya 48%
+            (0.0, 15.0),  # Pasta de Canola
+            (0.0, 12.0),  # Salvado de Trigo
+            (0.0, 22.0),  # DDGS de Maíz
+            (0.0, 8.0),  # Harina de Carne y Hueso
+            (0.5, 5.0),  # Aceite / Grasa
+            (2.0, 3.5),  # Núcleo Mineral con Fitasa
         ]
 
         res = linprog(
@@ -375,18 +420,21 @@ with tab_formulacion:
             props = res.x
             costo_kg = res.fun / 100.0
             st.success(
-                "✅ ¡Formulación por Energía Neta y Proteína Ideal completada con éxito!"
+                "✅ ¡Formulación multi-ingrediente al mínimo costo calculada con éxito!"
             )
 
             df_formula = pd.DataFrame(
                 {
-                    "Ingrediente / Materia Prima": [
+                    "Materia Prima / Ingrediente": [
                         "Maíz Grano",
+                        "Sorgo Grano",
                         "Pasta de Soya 48%",
                         "Pasta de Canola",
                         "Salvado de Trigo",
+                        "DDGS de Maíz",
+                        "Harina de Carne y Hueso",
                         "Aceite Vegetal / Grasa",
-                        "Núcleo con Fitasa de Nueva Generación",
+                        "Núcleo Vitamínico-Mineral con Fitasa",
                     ],
                     "Inclusión (%)": [round(p, 2) for p in props],
                     "Kg por Tonelada": [round(p * 10, 2) for p in props],
@@ -411,7 +459,7 @@ with tab_formulacion:
             )
         else:
             st.error(
-                "⚠️ No se encontró solución factible. Por favor verifique que los costos de los ingredientes sean positivos y que los rangos de inclusión permitan sumar 100%."
+                "⚠️ No se encontró solución factible con los precios o restricciones actuales. Revise los costos o rangos de inclusión."
             )
 
 # ==========================================
@@ -493,5 +541,5 @@ with tab_lactancia:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v5.1 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v5.2 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
