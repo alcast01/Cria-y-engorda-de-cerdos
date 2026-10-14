@@ -112,11 +112,11 @@ st.markdown(
 st.markdown(
     """
     <div class="brand-container">
-        <div class="brand-logo-badge">🐖 🧬 SISTEMAS DE NUTRICIÓN PORCINA DE PRECISIÓN Y PLF</div>
-        <h1 class="brand-title">PORCIDEX™</h1>
-        <p class="brand-slogan">"Ciencia, Innovación y Precisión al Servicio de la Porcicultura Moderna"</p>
+        <div class="brand-logo-badge">🐖 🧬 SISTEMAS DE NUTRICIÓN PORCINA DE PRECISIÓN Y PLF v2.0</div>
+        <h1 class="brand-title">PORCIDEX™ PRO</h1>
+        <p class="brand-slogan">"Inteligencia Artificial, Nutrición Dinámica y Rentabilidad Predictiva"</p>
         <div class="meta-info-container">
-            <span>Versión: <strong class="meta-item">v1.0 Pro</strong></span>
+            <span>Versión: <strong class="meta-item">v2.0 Enterprise</strong></span>
             <span>•</span>
             <span>Nº de Serie: <strong class="meta-item">PRX-2026-MX-9842</strong></span>
             <span>•</span>
@@ -134,17 +134,11 @@ st.sidebar.header("🔬 Panel PLF & Variables Biológicas")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🌡️ Ambiente y Estrés Térmico (THI Dinámico)")
-temp_amb = st.sidebar.slider(
-    "Temperatura Ambiental (°C)", 10.0, 38.0, 24.0, 0.5
-)
+temp_amb = st.sidebar.slider("Temperatura Ambiental (°C)", 10.0, 38.0, 24.0, 0.5)
 hum_relativa = st.sidebar.slider("Humedad Relativa (%)", 20.0, 95.0, 65.0, 5.0)
-vel_aire = st.sidebar.slider(
-    "Velocidad del Aire / Ventilación (m/s)", 0.0, 2.5, 0.4, 0.1
-)
+vel_aire = st.sidebar.slider("Velocidad del Aire / Ventilación (m/s)", 0.0, 2.5, 0.4, 0.1)
 
-thi_calculado = temp_amb - (0.55 - (0.55 * (hum_relativa / 100.0))) * (
-    temp_amb - 14.4
-)
+thi_calculado = temp_amb - (0.55 - (0.55 * (hum_relativa / 100.0))) * (temp_amb - 14.4)
 
 if thi_calculado > 78.0:
     badge_thi = '<span class="status-badge-red">🔴 PELIGRO: Estrés Calórico Crítico</span>'
@@ -204,11 +198,11 @@ tab_engorda, tab_formulacion, tab_lactancia, tab_resumen = st.tabs(
 )
 
 # ==========================================
-# PESTAÑA 1: ENGORDA, PLF, BARRA DE GDP Y EVALUACIÓN FINANCIERA
+# PESTAÑA 1: ENGORDA, PLF, BARRA DE GDP Y FINANZAS
 # ==========================================
 with tab_engorda:
     st.subheader(
-        "Módulo de Simulación Dinámica, Ganadería de Precisión (PLF) y Evaluación de Rentabilidad Financiera"
+        "Módulo de Simulación Dinámica, Ganadería de Precisión (PLF) y Evaluación Financiera"
     )
     st.markdown("💡 *Guía visual para el productor: Los indicadores de color denotan el estado actual de la producción y la viabilidad económica del proyecto.*")
 
@@ -229,15 +223,9 @@ with tab_engorda:
             ],
         )
 
-        peso_inicial = st.number_input(
-            "Peso Inicial Promedio (kg)", 7.0, 110.0, 15.0
-        )
-        peso_objetivo = st.number_input(
-            "Peso Objetivo / Salida (kg)", 10.0, 130.0, 115.0
-        )
-        num_animales = st.number_input(
-            "Tamaño del Lote (Animales)", 1, 5000, 200
-        )
+        peso_inicial = st.number_input("Peso Inicial Promedio (kg)", 7.0, 110.0, 15.0)
+        peso_objetivo = st.number_input("Peso Objetivo / Salida (kg)", 10.0, 130.0, 115.0)
+        num_animales = st.number_input("Tamaño del Lote (Animales)", 1, 5000, 200)
 
         st.markdown("---")
         st.markdown("### ⚡ Ajuste Manual de GDP")
@@ -281,10 +269,7 @@ with tab_engorda:
         factor_estres = 1.0
         if diff_temp > 2.0:
             mitigacion_viento = min(0.18, vel_aire * 0.09)
-            factor_estres = max(
-                0.60,
-                1.0 - (((diff_temp - 2.0) * 0.038) - mitigacion_viento),
-            )
+            factor_estres = max(0.60, 1.0 - (((diff_temp - 2.0) * 0.038) - mitigacion_viento))
         elif diff_temp < -3.0:
             factor_estres = max(0.82, 1.0 - (abs(diff_temp + 3.0) * 0.015))
 
@@ -309,7 +294,6 @@ with tab_engorda:
         consumo_total_cerdo = consumo_diario * dias_estudio
         consumo_total_lote = consumo_total_cerdo * num_animales
 
-        # Costo promedio base de alimento ($6.80 MXN/kg como referencia dinámica)
         costo_alimento_kg = 6.80
         costo_alimento_cerdo = consumo_total_cerdo * costo_alimento_kg
         costo_total_cerdo = (
@@ -328,7 +312,6 @@ with tab_engorda:
         roi_porcentaje = (utilidad_neta_lote / max(1.0, costo_total_lote)) * 100.0
         punto_equilibrio_kg = costo_total_cerdo / max(1.0, peso_objetivo)
 
-        # SEMÁFOROS ZOOTÉCNICOS Y FINANCIEROS
         if gdp_ajustada >= 0.85:
             badge_gdp = '<span class="status-badge-green">🟢 ÓPTIMO: Crecimiento Rápido</span>'
         elif gdp_ajustada >= 0.60:
@@ -400,9 +383,7 @@ with tab_engorda:
 
         st.markdown("### 📈 Curva Biológica de Crecimiento Estocástico")
         semanas = np.arange(1, dias_estudio + 1, 7)
-        pesos_proy = [
-            min(peso_objetivo, peso_inicial + (gdp_ajustada * d)) for d in semanas
-        ]
+        pesos_proy = [min(peso_objetivo, peso_inicial + (gdp_ajustada * d)) for d in semanas]
         df_grafica = pd.DataFrame(
             {
                 "Día": semanas,
@@ -800,11 +781,11 @@ def generar_pdf_reporte(
 
     pdf.set_font("Helvetica", "B", 16)
     pdf.set_text_color(31, 78, 120)
-    pdf.cell(0, 10, "PORCIDEX PRO - REPORTE TECNICO Y COMERCIAL", ln=True, align="C")
+    pdf.cell(0, 10, "PORCIDEX PRO v2.0 - REPORTE ENTERPRISE", ln=True, align="C")
 
     pdf.set_font("Helvetica", "I", 9)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 4, "Version: v1.0 Pro | S/N: PRX-2026-MX-9842", ln=True, align="C")
+    pdf.cell(0, 4, "Version: v2.0 Enterprise | S/N: PRX-2026-MX-9842", ln=True, align="C")
     pdf.cell(0, 5, "Creado y desarrollado por el Dr. Alejandro Castaneda Correa", ln=True, align="C")
     pdf.ln(3)
 
@@ -898,7 +879,7 @@ def generar_pdf_reporte(
     pdf.cell(
         0,
         5,
-        "Porcidex v1.0 Pro | S/N: PRX-2026-MX-9842 | Dr. Alejandro Castaneda Correa",
+        "Porcidex v2.0 Enterprise | S/N: PRX-2026-MX-9842 | Dr. Alejandro Castaneda Correa",
         align="C",
     )
 
@@ -1024,5 +1005,5 @@ with tab_resumen:
 
 st.markdown("---")
 st.caption(
-    "Porcidex v1.0 Pro | S/N: PRX-2026-MX-9842 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
+    "Porcidex v2.0 Enterprise | S/N: PRX-2026-MX-9842 | Creado y desarrollado por el Dr. Alejandro Castañeda Correa"
 )
