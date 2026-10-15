@@ -11,106 +11,144 @@ st.set_page_config(
     page_title="Porcidex Pro | Nutrición y Porcicultura de Precisión",
     page_icon="🐖",
     layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# --- ESTILOS CSS PERSONALIZADOS Y LOGOTIPO EMBLEMÁTICO ---
+# --- ESTILOS CSS PERSONALIZADOS Y LOGOTIPO VANGUARDISTA NEOMÓRFICO ---
 st.markdown(
     """
     <style>
-    .brand-container {
-        background: linear-gradient(135deg, #1b365d 0%, #0d1b2a 100%);
-        padding: 2.2rem;
-        border-radius: 14px;
-        color: white;
+    /* Importación de tipografías modernas */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Cabecera Principal / Banner */
+    .brand-hero-card {
+        background: linear-gradient(135deg, #0b192c 0%, #1e3e62 50%, #000000 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 20px;
+        color: #ffffff;
         text-align: center;
         margin-bottom: 2rem;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        position: relative;
+        overflow: hidden;
     }
+
     .brand-logo-badge {
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(39, 174, 96, 0.15);
+        border: 1px solid #27ae60;
         display: inline-block;
-        padding: 0.4rem 1.2rem;
+        padding: 0.4rem 1.4rem;
         border-radius: 50px;
-        font-size: 1.05rem;
-        margin-bottom: 0.8rem;
-        letter-spacing: 1.5px;
-        font-weight: 600;
-        color: #a9dfbf;
-    }
-    .brand-title {
-        font-size: 2.8rem;
-        font-weight: 900;
-        letter-spacing: 3px;
-        margin: 0;
-        color: #ffffff;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    .brand-slogan {
-        font-size: 1.2rem;
-        font-style: italic;
-        color: #d9e1e8;
-        margin-top: 0.6rem;
-        margin-bottom: 1.2rem;
-    }
-    .meta-info-container {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        font-size: 0.9rem;
-        color: #b0bec5;
-        font-weight: 500;
-        border-top: 1px solid rgba(255,255,255,0.15);
-        padding-top: 0.9rem;
-        margin-top: 0.5rem;
-        flex-wrap: wrap;
-    }
-    .meta-item {
-        color: #ffffff;
-    }
-    .creator-tag {
-        color: #f39c12;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        letter-spacing: 2px;
         font-weight: 700;
+        color: #2ecc71;
+        text-transform: uppercase;
     }
+
+    .brand-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin: 0.2rem 0;
+        background: linear-gradient(90deg, #ffffff 0%, #a9dfbf 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .brand-slogan {
+        font-size: 1.15rem;
+        color: #d1d5db;
+        margin-top: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-weight: 400;
+    }
+
+    .creator-tag-bar {
+        font-size: 0.85rem;
+        letter-spacing: 1.5px;
+        color: #f39c12;
+        font-weight: 800;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        padding-top: 1rem;
+        margin-top: 1rem;
+        text-transform: uppercase;
+    }
+
+    /* Tarjetas de Planes Glassmorphism */
+    .pricing-card-v2 {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #e5e7eb;
+        padding: 2rem 1.5rem;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        transition: all 0.3s ease-in-out;
+        height: 100%;
+    }
+
+    .pricing-card-v2:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        border-color: #1e3e62;
+    }
+
+    .pricing-card-popular {
+        border: 2px solid #27ae60 !important;
+        background: #ffffff;
+    }
+
+    .login-container-card {
+        background: #ffffff;
+        padding: 2.2rem;
+        border-radius: 18px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+    }
+
     .status-badge-green {
         background-color: #27ae60;
         color: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 6px;
-        font-weight: bold;
+        padding: 0.35rem 0.85rem;
+        border-radius: 8px;
+        font-weight: 700;
         display: inline-block;
+        font-size: 0.85rem;
     }
+
     .status-badge-orange {
         background-color: #e67e22;
         color: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 6px;
-        font-weight: bold;
+        padding: 0.35rem 0.85rem;
+        border-radius: 8px;
+        font-weight: 700;
         display: inline-block;
+        font-size: 0.85rem;
     }
+
     .status-badge-red {
         background-color: #c0392b;
         color: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 6px;
-        font-weight: bold;
-        display: inline-block;
-    }
-    .report-card {
-        background-color: #f8f9fa;
-        padding: 1.2rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 8px;
-        border-left: 5px solid #1f4e78;
-        margin-bottom: 1rem;
+        font-weight: 700;
+        display: inline-block;
+        font-size: 0.85rem;
     }
-    .pricing-card {
-        background-color: #ffffff;
-        border: 1px solid #dce2e6;
+
+    .report-card {
+        background-color: #f8fafc;
         padding: 1.5rem;
         border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        transition: transform 0.2s;
+        border-left: 6px solid #1e3e62;
+        margin-bottom: 1.2rem;
     }
     </style>
 """,
@@ -130,113 +168,151 @@ if "plan_suscripcion" not in st.session_state:
     st.session_state.plan_suscripcion = "Granja Comercial (Profesional)"
 
 USUARIOS_DB = {
-    "alejandro": {"password": "porcidex2026", "pin_2fa": "849201", "nombre": "Dr. Alejandro Castañeda Correa", "rol": "Administrador / Investigador"},
+    "alejandro": {"password": "porcidex2026", "pin_2fa": "849201", "nombre": "Dr. Alejandro Castañeda Correa", "rol": "Administrador / Creador"},
     "productor": {"password": "cerdos123", "pin_2fa": "123456", "nombre": "Productor Porcícola Zacatecas", "rol": "Productor Comercial"},
     "nutriologo": {"password": "nutricion", "pin_2fa": "654321", "nombre": "MVZ Nutrición Porcina", "rol": "Nutriólogo Asesor"},
 }
 
 # ==========================================
-# PÁGINA DE INICIO: PLANES Y LOGIN (PRE-LOGIN)
+# LOGOTIPO VECTORIAL SVG AVANZADO
+# ==========================================
+def render_logo_svg():
+    return """
+    <svg width="110" height="110" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="90" fill="url(#paint0_linear)" stroke="#27ae60" stroke-width="4"/>
+        <path d="M60 110C60 85 80 65 105 65C130 65 145 80 145 100C145 120 130 135 105 135C90 135 78 128 70 120" stroke="#a9dfbf" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="125" cy="88" r="7" fill="#ffffff"/>
+        <path d="M140 100L160 95M140 108L158 112" stroke="#27ae60" stroke-width="6" stroke-linecap="round"/>
+        <path d="M50 140Q100 170 150 140" stroke="#f39c12" stroke-width="5" stroke-dasharray="8 8" fill="none"/>
+        <defs>
+            <linearGradient id="paint0_linear" x1="10" y1="10" x2="190" y2="190" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#0b192c"/>
+                <stop offset="1" stop-color="#1e3e62"/>
+            </linearGradient>
+        </defs>
+    </svg>
+    """
+
+# ==========================================
+# PÁGINA DE INICIO: SEPARACIÓN DE PLANES Y LOGIN
 # ==========================================
 if not st.session_state.autenticado:
+    # CABECERA PRINCIPAL CON LOGO Y TEXTOS REQUERIDOS
     st.markdown(
-        """
-        <div class="brand-container">
-            <div class="brand-logo-badge">🐖 🧬 SISTEMAS DE NUTRICIÓN PORCINA DE PRECISIÓN Y PLF v3.0</div>
+        f"""
+        <div class="brand-hero-card">
+            <div>{render_logo_svg()}</div>
+            <div class="brand-logo-badge">🧬 PLATAFORMA DE NUTRICIÓN Y PLF DE PRECISIÓN</div>
             <h1 class="brand-title">PORCIDEX™ PRO</h1>
-            <p class="brand-slogan">"Inteligencia Artificial, Nutrición Dinámica y Rentabilidad Predictiva al Servicio de la Porcicultura"</p>
+            <p class="brand-slogan">Ciencia, innovación y precisión al servicio de la porcicultura moderna.</p>
+            <div class="creator-tag-bar">DESARROLLADA Y CREADA POR: DR. ALEJANDRO CASTAÑEDA CORREA</div>
         </div>
     """,
         unsafe_allow_html=True,
     )
 
-    st.subheader("💳 Elija el Plan de Suscripción Ideal para su Granja")
-    st.markdown("Explore nuestras opciones diseñadas para pequeños productores, granjas comerciales e integradoras industriales:")
+    # 1. SECCIÓN DE PLANES DE SUSCRIPCIÓN (SEPARADA)
+    st.markdown("## 💳 Planes de Suscripción y Licenciamiento Clinic-IA")
+    st.markdown("Seleccione el plan de licenciamiento que mejor se adapte a las necesidades operativas de su granja:")
 
     col_p1, col_p2, col_p3 = st.columns(3)
 
     with col_p1:
         st.markdown(
             """
-            <div class="pricing-card">
-                <h3>🌱 Productor Independiente</h3>
-                <h2 style="color: #1f4e78;">$499 <small>MXN/mes</small></h2>
-                <p><b>Para granjas familiares y lotes pequeños (< 500 cerdos)</b></p>
-                <hr>
-                <ul style="text-align: left; font-size: 0.9rem;">
-                    <li>Simulador de Engorda y GDP</li>
-                    <li>Evaluación de Rentabilidad Básica</li>
-                    <li>Cálculo de Consumo de Alimento</li>
-                    <li>Soporte Técnico vía Email</li>
+            <div class="pricing-card-v2">
+                <h3 style="color:#0b192c; font-weight:700;">🌱 Productor Independiente</h3>
+                <h2 style="color: #1e3e62; font-size:2.2rem;">$499 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
+                <p style="color:#4b5563; font-size:0.9rem;">Para unidades de producción pequeñas o de traspatio (&lt; 500 cerdos).</p>
+                <hr style="border-color:#f3f4f6; margin:1rem 0;">
+                <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
+                    <li>✓ Simulador de Engorda y Crecimiento</li>
+                    <li>✓ Evaluación de Rentabilidad Básica</li>
+                    <li>✓ Proyección de Consumo de Alimento</li>
+                    <li>✓ Soporte Técnico Digital</li>
                 </ul>
             </div>
             """,
             unsafe_allow_html=True,
         )
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Elegir Plan Básico", key="btn_p1_front", use_container_width=True):
             st.session_state.plan_suscripcion = "Productor Independiente (Básico)"
-            st.success("✅ Plan Básico seleccionado. Proceda a iniciar sesión.")
+            st.success("✅ Plan Básico asignado. Complete su inicio de sesión abajo.")
 
     with col_p2:
         st.markdown(
             """
-            <div class="pricing-card" style="border: 2px solid #27ae60;">
-                <span class="status-badge-green" style="margin-bottom:0.5rem;">MÁS POPULAR</span>
-                <h3>📈 Granja Comercial</h3>
-                <h2 style="color: #27ae60;">$1,499 <small>MXN/mes</small></h2>
-                <p><b>Para granjas medianas y comerciales (500 - 3,000 cerdos)</b></p>
-                <hr>
-                <ul style="text-align: left; font-size: 0.9rem;">
-                    <li><b>Todo lo del Plan Básico +</b></li>
-                    <li>Formulación por Programación Lineal</li>
-                    <li>Módulo de Cerdas en Lactancia</li>
-                    <li>Análisis Financiero Avanzado y ROI</li>
-                    <li>Exportación de Reportes PDF Profesionales</li>
+            <div class="pricing-card-v2 pricing-card-popular">
+                <span class="status-badge-green" style="margin-bottom:0.8rem;">RECOMENDADO</span>
+                <h3 style="color:#0b192c; font-weight:700;">📈 Granja Comercial</h3>
+                <h2 style="color: #27ae60; font-size:2.2rem;">$1,499 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
+                <p style="color:#4b5563; font-size:0.9rem;">Para granjas medianas y comerciales (500 a 3,000 cerdos).</p>
+                <hr style="border-color:#f3f4f6; margin:1rem 0;">
+                <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
+                    <li>✓ <b>Todo lo del Plan Básico +</b></li>
+                    <li>✓ Formulación por Programación Lineal</li>
+                    <li>✓ Módulo de Cerdas en Lactancia y Cría</li>
+                    <li>✓ Análisis Financiero Avanzado y ROI</li>
+                    <li>✓ Exportación de Reportes PDF Certificados</li>
                 </ul>
             </div>
             """,
             unsafe_allow_html=True,
         )
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Elegir Plan Comercial", key="btn_p2_front", use_container_width=True):
             st.session_state.plan_suscripcion = "Granja Comercial (Profesional)"
-            st.success("✅ Plan Comercial seleccionado. Proceda a iniciar sesión.")
+            st.success("✅ Plan Comercial asignado. Complete su inicio de sesión abajo.")
 
     with col_p3:
         st.markdown(
             """
-            <div class="pricing-card">
-                <h3>🏭 Industrial & Integradoras</h3>
-                <h2 style="color: #c0392b;">$3,899 <small>MXN/mes</small></h2>
-                <p><b>Para empresas integradoras y macrogranjas (> 3,000 cerdos)</b></p>
-                <hr>
-                <ul style="text-align: left; font-size: 0.9rem;">
-                    <li><b>Todo lo del Plan Comercial +</b></li>
-                    <li>Conexión con Sensores PLF e IoT</li>
-                    <li>Monitoreo Térmico THI en Tiempo Real</li>
-                    <li>Permisos Multi-usuario por Granja</li>
-                    <li>Soporte Técnico Prioritario 24/7</li>
+            <div class="pricing-card-v2">
+                <h3 style="color:#0b192c; font-weight:700;">🏭 Industrial & Integradoras</h3>
+                <h2 style="color: #c0392b; font-size:2.2rem;">$3,899 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
+                <p style="color:#4b5563; font-size:0.9rem;">Para empresas integradoras y macrogranjas (&gt; 3,000 cerdos).</p>
+                <hr style="border-color:#f3f4f6; margin:1rem 0;">
+                <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
+                    <li>✓ <b>Todo lo del Plan Comercial +</b></li>
+                    <li>✓ Conexión de Sensores PLF e IoT</li>
+                    <li>✓ Monitoreo Térmico THI en Tiempo Real</li>
+                    <li>✓ Gestión Multi-Usuario por Sitio</li>
+                    <li>✓ Asesoría Especializada 24/7</li>
                 </ul>
             </div>
             """,
             unsafe_allow_html=True,
         )
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Elegir Plan Industrial", key="btn_p3_front", use_container_width=True):
             st.session_state.plan_suscripcion = "Industrial & Integradoras (Enterprise)"
-            st.success("✅ Plan Industrial seleccionado. Proceda a iniciar sesión.")
+            st.success("✅ Plan Industrial asignado. Complete su inicio de sesión abajo.")
 
+    # SEPARADOR FÍSICO Y VISUAL DE SECCIONES
     st.markdown("---")
-    
-    # SECCIÓN DE LOGIN Y 2FA
-    col_l1, col_l2, col_l3 = st.columns([1, 1.5, 1])
+
+    # 2. SECCIÓN DE INICIO DE SESIÓN Y 2FA (SEPARADA)
+    col_l1, col_l2, col_l3 = st.columns([1, 1.6, 1])
 
     with col_l2:
-        st.markdown(f"### 🔐 Acceso de Usuario • Plan Seleccionado: **{st.session_state.plan_suscripcion}**")
-        
+        st.markdown(
+            f"""
+            <div class="login-container-card">
+                <h3 style="color:#0b192c; margin-top:0; text-align:center;">🔐 Portal de Autenticación de Usuarios</h3>
+                <p style="text-align:center; color:#64748b; font-size:0.9rem;">Suscripción activa seleccionada: <b>{st.session_state.plan_suscripcion}</b></p>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        st.markdown("<br>", unsafe_allow_html=True)
+
         if not st.session_state.fase_2fa:
-            with st.form("form_login"):
-                usuario_input = st.text_input("Usuario", placeholder="Ej. alejandro, productor, nutriologo")
+            with st.form("form_login_separado"):
+                st.markdown("#### Paso 1: Credenciales de Acceso")
+                usuario_input = st.text_input("Nombre de Usuario", placeholder="Ej. alejandro, productor, nutriologo")
                 password_input = st.text_input("Contraseña", type="password", placeholder="••••••••")
-                btn_login = st.form_submit_button("Continuar a Verificación 2FA", use_container_width=True)
+                btn_login = st.form_submit_button("Siguiente: Autenticación 2FA ➔", use_container_width=True)
 
                 if btn_login:
                     usuario_limpio = usuario_input.strip().lower()
@@ -245,13 +321,14 @@ if not st.session_state.autenticado:
                         st.session_state.usuario_temporal = usuario_limpio
                         st.rerun()
                     else:
-                        st.error("❌ Usuario o contraseña incorrectos.")
+                        st.error("❌ Usuario o contraseña incorrectos. Verifique sus credenciales.")
         else:
-            st.info(f"📱 **Doble Factor de Autenticación (2FA):** Código PIN de seguridad (Demo PIN: `{USUARIOS_DB[st.session_state.usuario_temporal]['pin_2fa']}`).")
-            with st.form("form_2fa"):
-                pin_input = st.text_input("Ingrese PIN de 6 Dígitos", max_chars=6, type="password")
-                btn_validar_2fa = st.form_submit_button("Verificar y Acceder a la Plataforma", use_container_width=True)
-                btn_regresar = st.form_submit_button("Volver", use_container_width=True)
+            st.info(f"📱 **Doble Factor de Autenticación (2FA / Huella o Token):** Ingrese el código PIN enviado a su dispositivo seguro (PIN Demo: `{USUARIOS_DB[st.session_state.usuario_temporal]['pin_2fa']}`).")
+            with st.form("form_2fa_separado"):
+                st.markdown("#### Paso 2: Verificación de Identidad")
+                pin_input = st.text_input("Código PIN de 6 Dígitos", max_chars=6, type="password")
+                btn_validar_2fa = st.form_submit_button("🔓 Validar y Entrar a Porcidex™ Pro", use_container_width=True)
+                btn_regresar = st.form_submit_button("← Volver", use_container_width=True)
 
                 if btn_validar_2fa:
                     if pin_input == USUARIOS_DB[st.session_state.usuario_temporal]["pin_2fa"]:
@@ -260,13 +337,13 @@ if not st.session_state.autenticado:
                         st.session_state.fase_2fa = False
                         st.rerun()
                     else:
-                        st.error("❌ PIN de autenticación incorrecto.")
+                        st.error("❌ Código PIN de 2FA incorrecto.")
                 if btn_regresar:
                     st.session_state.fase_2fa = False
                     st.rerun()
 
-        st.markdown("💡 *Credenciales del Creador: Usuario: `alejandro` | Contraseña: `porcidex2026` | PIN: `849201`*")
-    
+        st.caption("💡 Credenciales del Creador: Usuario: `alejandro` | Contraseña: `porcidex2026` | PIN: `849201`")
+
     st.stop()
 
 # ==========================================
@@ -275,17 +352,19 @@ if not st.session_state.autenticado:
 
 st.markdown(
     f"""
-    <div class="brand-container">
-        <div class="brand-logo-badge">🐖 🧬 SISTEMAS DE NUTRICIÓN PORCINA DE PRECISIÓN Y PLF v3.0</div>
+    <div class="brand-hero-card">
+        <div>{render_logo_svg()}</div>
+        <div class="brand-logo-badge">🐖 🧬 SISTEMAS DE NUTRICIÓN PORCINA DE PRECISIÓN Y PLF</div>
         <h1 class="brand-title">PORCIDEX™ PRO</h1>
-        <p class="brand-slogan">"Inteligencia Artificial, Nutrición Dinámica y Rentabilidad Predictiva"</p>
+        <p class="brand-slogan">Ciencia, innovación y precisión al servicio de la porcicultura moderna.</p>
         <div class="meta-info-container">
-            <span>Usuario: <strong class="meta-item">{USUARIOS_DB[st.session_state.usuario_actual]['nombre']}</strong></span>
+            <span>Usuario Activo: <strong class="meta-item">{USUARIOS_DB[st.session_state.usuario_actual]['nombre']}</strong></span>
             <span>•</span>
             <span>Rol: <strong class="creator-tag">{USUARIOS_DB[st.session_state.usuario_actual]['rol']}</strong></span>
             <span>•</span>
-            <span>Suscripción Activa: <strong class="meta-item">{st.session_state.plan_suscripcion}</strong></span>
+            <span>Plan Activado: <strong class="meta-item">{st.session_state.plan_suscripcion}</strong></span>
         </div>
+        <div class="creator-tag-bar">DESARROLLADA Y CREADA POR: DR. ALEJANDRO CASTAÑEDA CORREA</div>
     </div>
 """,
     unsafe_allow_html=True,
@@ -443,7 +522,7 @@ with tab_engorda:
         semanas = np.arange(1, dias_estudio + 1, 7)
         pesos_proy = [min(peso_objetivo, peso_inicial + (gdp_ajustada * d)) for d in semanas]
         df_grafica = pd.DataFrame({"Día": semanas, "Peso Proyectado (kg)": [round(p, 2) for p in pesos_proy]})
-        st.line_chart(df_grafica.set_index("Día"), color=["#1f4e78"])
+        st.line_chart(df_grafica.set_index("Día"), color=["#1e3e62"])
 
 # ==========================================
 # PESTAÑA 2: FORMULACIÓN AVANZADA
@@ -500,6 +579,7 @@ def generar_pdf_reporte(etapa_eng, raza_eng, num_animales, peso_inicial, peso_ob
     pdf.cell(0, 10, "PORCIDEX PRO v3.0 - REPORTE DE PRODUCCION", ln=True, align="C")
     pdf.set_font("Helvetica", "I", 9)
     pdf.cell(0, 5, f"Plan: {st.session_state.plan_suscripcion} | Usuario: {USUARIOS_DB[st.session_state.usuario_actual]['nombre']}", ln=True, align="C")
+    pdf.cell(0, 5, "DESARROLLADA Y CREADA POR: DR. ALEJANDRO CASTANEDA CORREA", ln=True, align="C")
     pdf.ln(5)
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(0, 5, f"- Etapa: {etapa_eng} | Animales: {num_animales:,} cerdos", ln=True)
@@ -522,7 +602,7 @@ with tab_resumen:
         st.markdown(
             f"""
         <div class="report-card">
-            <h3 style="color: #1f4e78; margin-top:0;">📊 Resumen Ejecutivo y Financiero</h3>
+            <h3 style="color: #1e3e62; margin-top:0;">📊 Resumen Ejecutivo y Financiero</h3>
             <ul>
                 <li><b>Suscripción Activa:</b> {st.session_state.plan_suscripcion}</li>
                 <li><b>Etapa Evaluada:</b> {etapa_eng} ({num_animales:,} cerdos)</li>
@@ -540,7 +620,7 @@ with tab_resumen:
         st.markdown(
             f"""
         <div class="report-card">
-            <h3 style="color: #2e7d32; margin-top:0;">🧬 Confort Ambiental y PLF</h3>
+            <h3 style="color: #27ae60; margin-top:0;">🧬 Confort Ambiental y PLF</h3>
             <ul>
                 <li><b>Índice THI:</b> {thi_calculado:.1f}</li>
                 <li><b>Ventilación:</b> {vel_aire} m/s</li>
@@ -557,4 +637,5 @@ with tab_resumen:
     st.download_button("📄 Descargar Reporte Completo en PDF", data=pdf_bytes, file_name=f"Reporte_Porcidex_{etapa_eng}.pdf", mime="application/pdf")
 
 st.markdown("---")
-st.caption("Porcidex v3.0 Enterprise | S/N: PRX-2026-MX-9842 | Dr. Alejandro Castañeda Correa")
+st.markdown("<div style='text-align:center; font-weight:700; color:#475569;'>DESARROLLADA Y CREADA POR: DR. ALEJANDRO CASTAÑEDA CORREA</div>", unsafe_allow_html=True)
+st.caption("Porcidex v3.0 Enterprise | S/N: PRX-2026-MX-9842")
