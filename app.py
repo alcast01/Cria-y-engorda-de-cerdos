@@ -194,7 +194,7 @@ def render_logo_svg():
     """
 
 # ==========================================
-# PÁGINA DE INICIO: SEPARACIÓN DE PLANES Y LOGIN
+# PORTADA PRE-LOGIN: PESTAÑAS SEPARADAS
 # ==========================================
 if not st.session_state.autenticado:
     # CABECERA PRINCIPAL CON LOGO Y TEXTOS REQUERIDOS
@@ -211,138 +211,142 @@ if not st.session_state.autenticado:
         unsafe_allow_html=True,
     )
 
-    # 1. SECCIÓN DE PLANES DE SUSCRIPCIÓN (SEPARADA)
-    st.markdown("## 💳 Planes de Suscripción y Licenciamiento Clinic-IA")
-    st.markdown("Seleccione el plan de licenciamiento que mejor se adapte a las necesidades operativas de su granja:")
+    # CREACIÓN DE PESTAÑAS INDEPENDIENTES EN PORTADA
+    tab_planes_portada, tab_login_portada = st.tabs(
+        ["💳 Planes de Suscripción", "🔐 Iniciar Sesión"]
+    )
 
-    col_p1, col_p2, col_p3 = st.columns(3)
+    # --- PESTAÑA 1: PLANES DE SUSCRIPCIÓN ---
+    with tab_planes_portada:
+        st.markdown("### 📋 Elija el Plan de Licenciamiento para su Granja")
+        st.markdown("Explore nuestras opciones diseñadas para pequeños productores, granjas comerciales e integradoras industriales:")
 
-    with col_p1:
-        st.markdown(
-            """
-            <div class="pricing-card-v2">
-                <h3 style="color:#0b192c; font-weight:700;">🌱 Productor Independiente</h3>
-                <h2 style="color: #1e3e62; font-size:2.2rem;">$499 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
-                <p style="color:#4b5563; font-size:0.9rem;">Para unidades de producción pequeñas o de traspatio (&lt; 500 cerdos).</p>
-                <hr style="border-color:#f3f4f6; margin:1rem 0;">
-                <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
-                    <li>✓ Simulador de Engorda y Crecimiento</li>
-                    <li>✓ Evaluación de Rentabilidad Básica</li>
-                    <li>✓ Proyección de Consumo de Alimento</li>
-                    <li>✓ Soporte Técnico Digital</li>
-                </ul>
-            </div>
+        col_p1, col_p2, col_p3 = st.columns(3)
+
+        with col_p1:
+            st.markdown(
+                """
+                <div class="pricing-card-v2">
+                    <h3 style="color:#0b192c; font-weight:700;">🌱 Productor Independiente</h3>
+                    <h2 style="color: #1e3e62; font-size:2.2rem;">$499 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
+                    <p style="color:#4b5563; font-size:0.9rem;">Para unidades de producción pequeñas o de traspatio (&lt; 500 cerdos).</p>
+                    <hr style="border-color:#f3f4f6; margin:1rem 0;">
+                    <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
+                        <li>✓ Simulador de Engorda y Crecimiento</li>
+                        <li>✓ Evaluación de Rentabilidad Básica</li>
+                        <li>✓ Proyección de Consumo de Alimento</li>
+                        <li>✓ Soporte Técnico Digital</li>
+                    </ul>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Elegir Plan Básico", key="btn_p1_front", use_container_width=True):
+                st.session_state.plan_suscripcion = "Productor Independiente (Básico)"
+                st.success("✅ Plan Básico asignado. Vaya a la pestaña 'Iniciar Sesión' para ingresar.")
+
+        with col_p2:
+            st.markdown(
+                """
+                <div class="pricing-card-v2 pricing-card-popular">
+                    <span class="status-badge-green" style="margin-bottom:0.8rem;">RECOMENDADO</span>
+                    <h3 style="color:#0b192c; font-weight:700;">📈 Granja Comercial</h3>
+                    <h2 style="color: #27ae60; font-size:2.2rem;">$1,499 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
+                    <p style="color:#4b5563; font-size:0.9rem;">Para granjas medianas y comerciales (500 a 3,000 cerdos).</p>
+                    <hr style="border-color:#f3f4f6; margin:1rem 0;">
+                    <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
+                        <li>✓ <b>Todo lo del Plan Básico +</b></li>
+                        <li>✓ Formulación por Programación Lineal</li>
+                        <li>✓ Módulo de Cerdas en Lactancia y Cría</li>
+                        <li>✓ Análisis Financiero Avanzado y ROI</li>
+                        <li>✓ Exportación de Reportes PDF Certificados</li>
+                    </ul>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Elegir Plan Comercial", key="btn_p2_front", use_container_width=True):
+                st.session_state.plan_suscripcion = "Granja Comercial (Profesional)"
+                st.success("✅ Plan Comercial asignado. Vaya a la pestaña 'Iniciar Sesión' para ingresar.")
+
+        with col_p3:
+            st.markdown(
+                """
+                <div class="pricing-card-v2">
+                    <h3 style="color:#0b192c; font-weight:700;">🏭 Industrial & Integradoras</h3>
+                    <h2 style="color: #c0392b; font-size:2.2rem;">$3,899 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
+                    <p style="color:#4b5563; font-size:0.9rem;">Para empresas integradoras y macrogranjas (&gt; 3,000 cerdos).</p>
+                    <hr style="border-color:#f3f4f6; margin:1rem 0;">
+                    <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
+                        <li>✓ <b>Todo lo del Plan Comercial +</b></li>
+                        <li>✓ Conexión de Sensores PLF e IoT</li>
+                        <li>✓ Monitoreo Térmico THI en Tiempo Real</li>
+                        <li>✓ Gestión Multi-Usuario por Sitio</li>
+                        <li>✓ Asesoría Especializada 24/7</li>
+                    </ul>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Elegir Plan Industrial", key="btn_p3_front", use_container_width=True):
+                st.session_state.plan_suscripcion = "Industrial & Integradoras (Enterprise)"
+                st.success("✅ Plan Industrial asignado. Vaya a la pestaña 'Iniciar Sesión' para ingresar.")
+
+    # --- PESTAÑA 2: INICIO DE SESIÓN Y 2FA ---
+    with tab_login_portada:
+        col_l1, col_l2, col_l3 = st.columns([1, 1.6, 1])
+
+        with col_l2:
+            st.markdown(
+                f"""
+                <div class="login-container-card">
+                    <h3 style="color:#0b192c; margin-top:0; text-align:center;">🔐 Acceso Seguro al Sistema</h3>
+                    <p style="text-align:center; color:#64748b; font-size:0.9rem;">Plan seleccionado: <b>{st.session_state.plan_suscripcion}</b></p>
+                </div>
             """,
-            unsafe_allow_html=True,
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Elegir Plan Básico", key="btn_p1_front", use_container_width=True):
-            st.session_state.plan_suscripcion = "Productor Independiente (Básico)"
-            st.success("✅ Plan Básico asignado. Complete su inicio de sesión abajo.")
+                unsafe_allow_html=True,
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
 
-    with col_p2:
-        st.markdown(
-            """
-            <div class="pricing-card-v2 pricing-card-popular">
-                <span class="status-badge-green" style="margin-bottom:0.8rem;">RECOMENDADO</span>
-                <h3 style="color:#0b192c; font-weight:700;">📈 Granja Comercial</h3>
-                <h2 style="color: #27ae60; font-size:2.2rem;">$1,499 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
-                <p style="color:#4b5563; font-size:0.9rem;">Para granjas medianas y comerciales (500 a 3,000 cerdos).</p>
-                <hr style="border-color:#f3f4f6; margin:1rem 0;">
-                <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
-                    <li>✓ <b>Todo lo del Plan Básico +</b></li>
-                    <li>✓ Formulación por Programación Lineal</li>
-                    <li>✓ Módulo de Cerdas en Lactancia y Cría</li>
-                    <li>✓ Análisis Financiero Avanzado y ROI</li>
-                    <li>✓ Exportación de Reportes PDF Certificados</li>
-                </ul>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Elegir Plan Comercial", key="btn_p2_front", use_container_width=True):
-            st.session_state.plan_suscripcion = "Granja Comercial (Profesional)"
-            st.success("✅ Plan Comercial asignado. Complete su inicio de sesión abajo.")
+            if not st.session_state.fase_2fa:
+                with st.form("form_login_separado"):
+                    st.markdown("#### Paso 1: Credenciales de Acceso")
+                    usuario_input = st.text_input("Nombre de Usuario", placeholder="Ej. alejandro, productor, nutriologo")
+                    password_input = st.text_input("Contraseña", type="password", placeholder="••••••••")
+                    btn_login = st.form_submit_button("Siguiente: Autenticación 2FA ➔", use_container_width=True)
 
-    with col_p3:
-        st.markdown(
-            """
-            <div class="pricing-card-v2">
-                <h3 style="color:#0b192c; font-weight:700;">🏭 Industrial & Integradoras</h3>
-                <h2 style="color: #c0392b; font-size:2.2rem;">$3,899 <small style="font-size:1rem; color:#6b7280;">MXN/mes</small></h2>
-                <p style="color:#4b5563; font-size:0.9rem;">Para empresas integradoras y macrogranjas (&gt; 3,000 cerdos).</p>
-                <hr style="border-color:#f3f4f6; margin:1rem 0;">
-                <ul style="text-align: left; font-size: 0.88rem; color:#374151; line-height: 1.8;">
-                    <li>✓ <b>Todo lo del Plan Comercial +</b></li>
-                    <li>✓ Conexión de Sensores PLF e IoT</li>
-                    <li>✓ Monitoreo Térmico THI en Tiempo Real</li>
-                    <li>✓ Gestión Multi-Usuario por Sitio</li>
-                    <li>✓ Asesoría Especializada 24/7</li>
-                </ul>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Elegir Plan Industrial", key="btn_p3_front", use_container_width=True):
-            st.session_state.plan_suscripcion = "Industrial & Integradoras (Enterprise)"
-            st.success("✅ Plan Industrial asignado. Complete su inicio de sesión abajo.")
+                    if btn_login:
+                        usuario_limpio = usuario_input.strip().lower()
+                        if usuario_limpio in USUARIOS_DB and USUARIOS_DB[usuario_limpio]["password"] == password_input:
+                            st.session_state.fase_2fa = True
+                            st.session_state.usuario_temporal = usuario_limpio
+                            st.rerun()
+                        else:
+                            st.error("❌ Usuario o contraseña incorrectos.")
+            else:
+                st.info(f"📱 **Doble Factor de Autenticación (2FA):** Ingrese el código PIN enviado a su dispositivo seguro (PIN Demo: `{USUARIOS_DB[st.session_state.usuario_temporal]['pin_2fa']}`).")
+                with st.form("form_2fa_separado"):
+                    st.markdown("#### Paso 2: Verificación de Identidad")
+                    pin_input = st.text_input("Código PIN de 6 Dígitos", max_chars=6, type="password")
+                    btn_validar_2fa = st.form_submit_button("🔓 Validar y Entrar a Porcidex™ Pro", use_container_width=True)
+                    btn_regresar = st.form_submit_button("← Volver", use_container_width=True)
 
-    # SEPARADOR FÍSICO Y VISUAL DE SECCIONES
-    st.markdown("---")
-
-    # 2. SECCIÓN DE INICIO DE SESIÓN Y 2FA (SEPARADA)
-    col_l1, col_l2, col_l3 = st.columns([1, 1.6, 1])
-
-    with col_l2:
-        st.markdown(
-            f"""
-            <div class="login-container-card">
-                <h3 style="color:#0b192c; margin-top:0; text-align:center;">🔐 Portal de Autenticación de Usuarios</h3>
-                <p style="text-align:center; color:#64748b; font-size:0.9rem;">Suscripción activa seleccionada: <b>{st.session_state.plan_suscripcion}</b></p>
-            </div>
-        """,
-            unsafe_allow_html=True,
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        if not st.session_state.fase_2fa:
-            with st.form("form_login_separado"):
-                st.markdown("#### Paso 1: Credenciales de Acceso")
-                usuario_input = st.text_input("Nombre de Usuario", placeholder="Ej. alejandro, productor, nutriologo")
-                password_input = st.text_input("Contraseña", type="password", placeholder="••••••••")
-                btn_login = st.form_submit_button("Siguiente: Autenticación 2FA ➔", use_container_width=True)
-
-                if btn_login:
-                    usuario_limpio = usuario_input.strip().lower()
-                    if usuario_limpio in USUARIOS_DB and USUARIOS_DB[usuario_limpio]["password"] == password_input:
-                        st.session_state.fase_2fa = True
-                        st.session_state.usuario_temporal = usuario_limpio
-                        st.rerun()
-                    else:
-                        st.error("❌ Usuario o contraseña incorrectos. Verifique sus credenciales.")
-        else:
-            st.info(f"📱 **Doble Factor de Autenticación (2FA / Huella o Token):** Ingrese el código PIN enviado a su dispositivo seguro (PIN Demo: `{USUARIOS_DB[st.session_state.usuario_temporal]['pin_2fa']}`).")
-            with st.form("form_2fa_separado"):
-                st.markdown("#### Paso 2: Verificación de Identidad")
-                pin_input = st.text_input("Código PIN de 6 Dígitos", max_chars=6, type="password")
-                btn_validar_2fa = st.form_submit_button("🔓 Validar y Entrar a Porcidex™ Pro", use_container_width=True)
-                btn_regresar = st.form_submit_button("← Volver", use_container_width=True)
-
-                if btn_validar_2fa:
-                    if pin_input == USUARIOS_DB[st.session_state.usuario_temporal]["pin_2fa"]:
-                        st.session_state.autenticado = True
-                        st.session_state.usuario_actual = st.session_state.usuario_temporal
+                    if btn_validar_2fa:
+                        if pin_input == USUARIOS_DB[st.session_state.usuario_temporal]["pin_2fa"]:
+                            st.session_state.autenticado = True
+                            st.session_state.usuario_actual = st.session_state.usuario_temporal
+                            st.session_state.fase_2fa = False
+                            st.rerun()
+                        else:
+                            st.error("❌ Código PIN de 2FA incorrecto.")
+                    if btn_regresar:
                         st.session_state.fase_2fa = False
                         st.rerun()
-                    else:
-                        st.error("❌ Código PIN de 2FA incorrecto.")
-                if btn_regresar:
-                    st.session_state.fase_2fa = False
-                    st.rerun()
 
-        st.caption("💡 Credenciales del Creador: Usuario: `alejandro` | Contraseña: `porcidex2026` | PIN: `849201`")
+            st.caption("💡 Credenciales del Creador: Usuario: `alejandro` | Contraseña: `porcidex2026` | PIN: `849201`")
 
     st.stop()
 
